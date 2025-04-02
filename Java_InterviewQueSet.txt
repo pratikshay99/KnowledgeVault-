@@ -1,0 +1,194 @@
+Here’s a comprehensive list of 100 topmost Java interview questions, covering Core Java, OOPs, Collections, Multithreading, Java 8, and more.
+-----------------------------------------------------------------------------------------------
+Core Java Basics (1-20)
+-----------------------------------------------------------------------------------------------
+1. What are the main features of Java?
+2. What is the difference between JDK, JRE, and JVM?
+3. Explain the Java Virtual Machine (JVM).
+4. Why is Java platform-independent?
+5. What is the difference between a compiled language and an interpreted language?
+6. Why is Java not 100% Object-Oriented?
+7. What is the difference between == and .equals() in Java?
+8. What are Wrapper classes in Java?
+9. What is type casting in Java?
+10. What is Autoboxing and Unboxing?
+11. What is the difference between primitive and reference data types?
+12. What is the difference between final, finally, and finalize()?
+13. What is the use of the static keyword in Java?
+14. What is the difference between this and super in Java?
+15. What are the access modifiers in Java?
+16. What is the difference between method overloading and method overriding?
+17. Explain the main() method in Java.
+18. What are constructors in Java? Can a constructor be final?
+19. Can we overload the main method in Java?
+20. Can a constructor return a value?
+--------------------------------------------------------------------------------------
+OOPs (Object-Oriented Programming) (21-40)
+---------------------------------------------------------------------------------------
+21. What are the four pillars of OOP?
+22. What is encapsulation? Give an example.
+23. What is inheritance? Explain types of inheritance.
+24. What is the difference between interface and abstract class?
+25. Can an interface have a constructor?
+26. Can an abstract class have a constructor?
+27. What is polymorphism? Explain runtime and compile-time polymorphism.
+28. Can we override a private method in Java?
+29. What is a default method in an interface?
+30. What is a marker interface?
+31. What is method hiding in Java?
+32. What is the difference between super and this keywords?
+33. Can we have multiple inheritance in Java?
+34. What is the difference between abstraction and encapsulation?
+35. Can an interface implement another interface?
+36. Can an interface extend multiple interfaces?
+37. What is the difference between a class and an object?
+38. What is the use of instanceof keyword?
+39. What is object cloning in Java?
+40. What is the difference between shallow copy and deep copy?
+----------------------------------------------------------------------------------------------------
+String and Exception Handling (41-55)
+--------------------------------------------------------------------------------------------------
+41. What is the difference between String, StringBuffer, and StringBuilder?
+42. Why are strings immutable in Java?
+43. What is the StringPool in Java?
+44. How can you make a mutable string in Java?
+45. What is the difference between == and .equals() when comparing strings?
+46. Can we use the final keyword with String?
+47. What is exception handling in Java?
+48. What are the types of exceptions in Java?
+49. What is the difference between checked and unchecked exceptions?
+50. What is the throws keyword in Java?
+51. What is the throw keyword in Java?
+52. What is the difference between throw and throws?
+53. Can we write multiple catch blocks in Java?
+54. Can we have a try block without a catch block?
+55. What is the difference between try-catch and try-finally?
+--------------------------------------------------------------------------------------------------------
+Collections Framework (56-70)
+------------------------------------------------------------------------------------------------------
+56. What is the Java Collections Framework?
+57. What is the difference between ArrayList and LinkedList?
+58. What is the difference between HashSet and TreeSet?
+59. What is the difference between HashMap and TreeMap?
+60. What is the difference between HashMap and Hashtable?
+61. Why is HashMap not thread-safe?
+62. What is LinkedHashMap in Java?
+63. What is the Queue interface in Java?
+64. What is the difference between ArrayList and Vector?
+65. What is a ConcurrentHashMap?
+66. What is the difference between Iterator and ListIterator?
+67. How does HashSet work internally?
+68. What is the Comparable interface in Java?
+69. What is the Comparator interface?
+70. What is the difference between fail-fast and fail-safe iterators?
+-------------------------------------------------------------------------------------
+Multithreading and Concurrency (71-85)
+----------------------------------------------------------------------------------------
+71. What is multithreading in Java?
+72. What is the difference between a thread and a process?
+73. What are the different ways to create a thread in Java?
+74. What is the difference between Runnable and Callable?
+75. What is the synchronized keyword in Java?
+76. What is the difference between synchronized method and synchronized block?
+77. What is the difference between wait() and sleep()?
+78. What is ThreadLocal in Java?
+79. What is volatile in Java?
+80. What is the difference between notify() and notifyAll()?
+81. What is the ExecutorService framework in Java?
+82. What is a Semaphore in Java?
+83. What is a deadlock in Java? How to prevent it?
+84. What is a race condition? How to prevent it?
+85. What are atomic operations in Java?
+-------------------------------------------------------------------------------------
+Java 8+ Features (86-95)
+--------------------------------------------------------------------------------------
+86. What are the key features of Java 8?
+87. What are functional interfaces in Java 8?
+88. What is a lambda expression in Java?
+89. What is the Optional class in Java?
+90. What are Streams in Java?
+91. What is the difference between map() and flatMap()?
+92. What are method references in Java?
+93. What is the difference between forEach() and forEachOrdered()?
+94. What is a default method in an interface?
+95. What is the Collectors class in Java?
+------------------------------------------------------------------------------
+Advanced Topics (96-100)
+--------------------------------------------------------------------------------
+96. What is garbage collection in Java?
+97. What are different types of garbage collectors in Java?
+98. What is the finalize() method in Java?
+99. What is reflection in Java?
+100. What is the difference between JIT and AOT compilation?
+--------------------------------------------------------------------------------------------
+Memory Management & Performance Tuning
+--------------------------------------------------------------------------------------------
+101. What is the difference between heap and stack memory in Java?
+102. How does garbage collection work in Java?
+103. What are strong, weak, soft, and phantom references in Java?
+104. What is memory leak in Java? How do you detect and fix it?
+105. What is OutOfMemoryError (OOM) in Java? How do you handle it?
+-------------------------------------------------------------------------------------------
+Java Internals
+-------------------------------------------------------------------------------------
+106. What happens internally when you create an object in Java?
+107. What is the difference between class loading, linking, and initialization?
+108. What are the different types of class loaders in Java?
+109. What is method area and metaspace in Java?
+110. How does the Just-In-Time (JIT) compiler optimize Java programs?
+---------------------------------------------------------------------------------
+Concurrency & Threading (Advanced)
+-------------------------------------------------------------------------------------
+111. What is the Fork/Join framework in Java?
+112. What are CountDownLatch and CyclicBarrier in Java?
+113. What is the difference between synchronized and Lock in Java?
+114. What is a ReentrantLock? Why use it over synchronized?
+115. What is an AtomicInteger and why is it used?
+---------------------------------------------------------------------------------------
+Serialization & Deserialization
+---------------------------------------------------------------------------------------
+116. What is serialization in Java?
+117. What is the purpose of the serialVersionUID field?
+118. What happens if you don’t define serialVersionUID?
+119. How do you customize serialization using Externalizable?
+120. Can we serialize a static variable in Java?
+--------------------------------------------------------------------------------------
+Networking & Java IO/NIO
+-----------------------------------------------------------------------------------------
+121. What is the difference between InputStream and Reader in Java?
+122. What is the difference between blocking and non-blocking IO in Java?
+123. What is the difference between FileReader and BufferedReader?
+124. What is Java NIO? How is it different from traditional IO?
+125. What is the difference between TCP and UDP in Java networking?
+--------------------------------------------------------------------------
+Java Security & Best Practices
+--------------------------------------------------------------------------------
+126. What are common security vulnerabilities in Java applications?
+127. What is a memory leak? How can you prevent it in Java?
+128. What is SQL injection? How can it be prevented in Java?
+129. How do you prevent deserialization vulnerabilities in Java?
+130. What is a SecurityManager in Java?
+------------------------------------------------------------------------------
+Java 9+ Features
+--------------------------------------------------------------------------------
+131. What is the Java Module System introduced in Java 9?
+132. What is the difference between var and explicit type declarations?
+133. What is a Compact String feature in Java 9?
+134. What is JShell in Java 9?
+135. How do Reactive Streams work in Java 9+?
+-------------------------------------------------------------------------------
+Design Patterns & Best Practices
+-------------------------------------------------------------------------------
+136. What is the Singleton pattern? How do you implement it in Java?
+137. What is the Factory design pattern? Give an example.
+138. What is the difference between Strategy and Observer patterns?
+139. What is Dependency Injection (DI)? How is it implemented in Java?
+140. What is the difference between Monolithic and Microservices architecture?
+---------------------------------------------------------------------------------
+Java 17+ Features
+---------------------------------------------------------------------------
+141. What are sealed classes in Java 17?
+142. What are record classes in Java?
+143. What is pattern matching for instanceof in Java 16+?
+144. How do you use Text Blocks in Java?
+145. What is the difference between G1, ZGC, and Shenandoah garbage collectors?
