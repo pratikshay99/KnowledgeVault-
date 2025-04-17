@@ -1,0 +1,863 @@
+When we say "Static methods belong to the class, not an object," it means:
+Static methods are associated with the class itself, rather than any specific instance (object) of the class.
+They can be called using the class name without creating an object.
+They cannot access instance variables or methods directly because those require an object
+
+
+Wrapper Classes in Java
+-convert primitive data types into objects. 
+-provide way to use primitives in object-oriented contexts where objects are required, such as collections, serialization, and multithreading.
+-✔ Useful in Collections: ArrayList<Integer> instead of int[]
+✔ Provides Utility Methods: Integer.parseInt("123"), Double.valueOf("3.14"), etc.
+
+
+Autoboxing and Unboxing allow automatic conversion between primitive data types and their corresponding wrapper classes.
+
+/*
+🚨 Never use return inside finally unless you intentionally want to override all previous return values.
+  🚨 If the finally block also has a return statement, it overrides any previous return from try or catch
+------------------------------------------------------------------------------------------------
+✔ Always executes, regardless of exceptions
+✔ Used for cleanup operations like closing resources
+✔ Does not execute only if JVM exits (System.exit(0))
+✔ Runs even when return is present in try or catch
+✔ finally executes before returning the value from try/catch.
+✔ If finally has a return, it overrides all previous return values.
+✔ Best practice: Avoid using return in finally to prevent confusion.
+✅ Even though return is in try, finally still runs before returning.
+-------------------------------------------------------------------------
+Scenario	                    finally Executed?	Explanation
+------------------------------------------------------------------------------
+No exception occurs	                     ✅          	Runs after try
+Exception occurs & caught	             ✅          	Runs after catch
+Exception occurs & not caught	         ✅          	Runs before the program terminates
+Return statement in try/catch	         ✅          	Runs after return
+System.exit(0) is called	             ❌             JVM shuts down immediately
+-------------------------------------------------------------------------------------
+🔥Understanding finally with return
+🌟 When a method contains a try-catch-finally block with return, the execution follows this order:
+    1. try executes → If no exception, moves to return inside try.
+    2. Before returning the value, finally executes.
+    3. After finally completes, the method returns the value from try or catch.
+-------------------------------------------------------------------------------------------------
+✔ finalize() was used for cleanup before GC but is deprecated in Java 9+.
+✔ Not reliable – May never run or cause delays.
+✔ Use try-with-resources or explicit close() instead
+----------------------------------------------------------------------------
+✔ static Variables → Shared across all objects.
+✔ static Methods → Can be called without an object, only access static variables & methods (not instance variables
+✔ static Blocks → Runs once when class loads.
+✔ static Classes → Inner classes that don’t need an instance.
+✔ Static block runs first (before the main method).
+✔ Static methods are hidden, not overridden.
+✔ Static nested classes can have a main method.
+✔ Static blocks can't access non-static variables.
+✔ Static constructors are not allowed.
+✔ Interfaces can have static methods (since Java 8).
+✔ Static methods belong to the class, not objects.
+-----------------------------------------------------------------------------------------------------------------------
+this: Refers to current class instance.
+super: Refers to parent class members.
+
+this:
+If a method parameter has the same name as an instance variable, Java gives priority to the local variable. this helps differentiate them.
+You don’t always need this, but it’s useful in these cases: ✔ Avoids confusion when local and instance variables have the same name.
+✔ Helps call another constructor inside the same class (constructor chaining).
+	-It calls another constructor inside the same class, avoiding repeated initialization logic.
+✔ Sometimes, we need to Pass the current object as an argument to a method or constructor.
+--------------------------------------------------------------------------------------------------------------------------------
+1️⃣ Uses of super in Java
+🧠 Even though we didn’t write super() in Child, Java added it automatically at the top of the Child constructor.
+Use Case						Description
+Access Parent Class Variables	Used when the child class has a variable with the same name as the parent class.
+Call Parent Class Methods		Used to call a method from the parent class when overridden in the child class.
+Call Parent Class Constructor		Used to invoke a constructor of the parent class to reuse initialization logic.
+------------------------------------------------------------------------------------------------------------------------------
+✅ Quick Notes:
+Parent p = new Child(); → Polymorphism
+    -You can only call parent methods (unless overridden).
+    -Overridden methods from Child are called at runtime.
+
+Child c = new Child();
+    -You get full access to both parent and child features.
+----------------------------------------------------------------------------------------------------------------------------
+Modifiers in Java are keywords that change the behavior or visibility of classes, methods, variables, or constructors.
+1️⃣ Access Modifiers — Who can access it?	= Who can use it?	(e.g. public, private)
+2️⃣ Non-Access Modifiers — What kind of behavior? = What special powers it has	(e.g. static, final, abstract)
+✅ On Classes
+-abstract – cannot be instantiated, must be subclassed.
+-final – cannot be extended (no child/subclass).
+-strictfp – enforces floating-point rules (rarely used), Makes floating-point calculations consistent across platforms
+✅ On Methods
+-abstract – no method body, must be overridden(must be implemented by subclass)
+-final – cannot be overridden.
+-static – belongs to class, not object.
+-synchronized – thread-safe-Only one thread can access at a time
+-native – Method is written in C/C++ (not Java)
+-strictfp – floating-point consistency.
+✅ On Variables
+-final – constant, value cannot change after initialization.
+-static – one copy for all objects, shared by all objects (class-level)
+-transient – not serialize- Skip this variable during serialization- won’t be saved in file if serialized
+-volatile – always read from main memory (used in multithreading)- always read fresh value in threads
+------------------------------------------------------------------------------------------------------------------------------
+🔥 Interview Trick: Can a top-level class be protected?
+✅ Answer: No. Only public or default allowed.
+🔸 1. Can a class be protected or private in Java?
+Top-level classes: ❌ No, can only be public or default (no modifier)
+Inner/nested classes: ✅ Yes! Can be private, protected, or public
+e.g private class MyClass {} // ❌ Compilation error – top-level can't be private
+🔸 2. What happens if you make a method both final and abstract?
+❌ Compilation Error.
+Because:
+-final = can't override
+-abstract = must override
+🔥 Trick: Can a method be abstract and static?
+✅ Answer: No. abstract needs object behavior, static is class-level.
+🔸 3. Access Modifiers in Interfaces
+-All methods -> public abstract by default (even if not written).
+-All variables -> public static final.
+🔥 Trick: Can you declare a private method in an interface?
+✅ Answer: Yes, since Java 9 — for internal helper methods.
+🔸 4. What is the use of volatile?
+-Ensures visibility between threads.
+-Without volatile, threads may cache variables → stale data.
+🔥 Trick: Does volatile make code thread-safe?
+❌ No, it only guarantees visibility, not atomicity.
+🔸 5. Can you combine modifiers?
+Yes, but must follow valid combinations.
+✅ Valid:
+public static final int MAX = 100;
+private synchronized void syncMethod() {}
+❌ Invalid:
+abstract final class Test {} // contradiction
+🧩 Q2: What’s the difference between transient and volatile?
+-transient → not saved during serialization
+-volatile → always read from main memory
+Q3: What access level does a method in an interface have by default?
+🔸 A: public abstract
+Q4: What is the access modifier of constructors in singleton pattern?
+🔸 A: private — restricts object creation.
+🧩 Q5: Can you override a private method?
+🔸 A: No — private methods are not inherited, so can't override.
+	class A {
+	    private void show() {}
+	}
+	class B extends A {
+	    private void show() {} // This is a NEW method, not override
+	}
+🔸 2. What’s the default access modifier in Java?
+-It’s called "package-private" (if you don’t write anything).
+-Visible only within the same package, not outside.
+🔸 3. Can you reduce the visibility of an overridden method?
+No ❌, can’t make access more restrictive when overriding a method.
+🔥e.g
+class A {
+    public void show() {}
+}
+class B extends A {
+    protected void show() {} // ❌ Error! Can't reduce visibility
+}
+🔸 4. Can constructors be private?
+✅ Yes! This is used in Singleton pattern or Factory pattern.
+class Singleton {
+    private Singleton() {}
+    public static Singleton getInstance() {
+        return new Singleton();
+    }
+}
+🔸 5. Can interface methods be private?
+Before Java 9: ❌ No
+From Java 9 onwards: ✅ Yes!
+Used for internal helper methods inside the interface.
+interface MyInterface {
+    private void helper() { } // ✅ Java 9+
+}
+🔸 7. Can an abstract method be private or static?
+No ❌
+private → not inherited, so can't be overridden
+static → belongs to class, abstract needs object
+🔸 9. Can you have two classes in the same file? How about access modifiers?
+✅ Yes, you can have multiple classes in a .java file.
+BUT: Only one public class allowed, and the file name must match it.
+public class A {}  // File name = A.java
+class B {}         // Default access
+8️⃣ Can you use protected outside the package?
+Answer: ❌ No — only in subclasses outside the package, not regular classes.
+9️⃣ Can variables in an interface be private?
+Answer: ❌ No. All interface variables are implicitly public static final.
+
+✅ Use final with caution: It’s great for constants and sealing inheritance.
+✅ Static context: You cannot access non-static members from static methods.
+-------------------------------------------------------------------------------------------------------------
+Constructors: 
+- used to create object & initialize objects, same name as class name
+-no return type, not even void
+-automatically calls constructor when object is created using new.
+-If we don’t define any constructor, Java provides a default no-arg constructor.
+-But as soon as we define any constructor, the default one is not provided automatically.
+-Constructor overloading is allowed, They can also call each other using this() or super() (for parent class).
+-if we overload constructor then have to implement default constructor, returns object created by it, not support inheritance of constructor
+-cannot be final, static, or abstract: 
+a. final: means do not want any class to override it, but constructor cannot be overridden. So no use of marking it final.
+-final or abstract don’t apply because constructors are never inherited or overridden.
+b. abstract: has no body & should be implemented in child class, constructor called implicitly when new keyword is used. Therefore it needs body.
+c. static: static methods called without creating object, access static variables & methods, but constructor purpose to initialize object, cant's static cz static 	don't have access to instance variable, no use of marking constructor static
+2️⃣ What happens if you write a constructor with a return type?
+It becomes a regular method, not a constructor.
+Because constructors never have return types — not even void. If you add one, the compiler treats it as a method with the class name.
+3️⃣ Can a constructor call another constructor?
+✅ Yes, using this() — but it must be the first statement in the constructor.
+4️⃣ What if a class has only parameterized constructors and no default one?
+Java doesn’t provide a default constructor in this case.
+So if someone tries to create an object using new ClassName(), it will throw a compilation error.
+5️⃣ Can you overload constructors?
+✅ Yes, constructor overloading is common —just change the parameters.
+-------------------------------------------------------------------------------------------------------------
+Singleton Pattern: Ensure only one object of a class is ever created — and provide a global access point to it.
+-To save memory (only one instance)
+-To control access to shared resources (like DB connection, logger, configuration)
+-Common in: Spring Beans, Logger classes, Cache, etc.
+📌 Pro Tips for Interviews:
+✅ Singleton ensures a single instance with global access.
+✅ Use private constructor + static method.
+✅ Mention eager vs lazy initialization.
+✅ In multithreading, use synchronized or Double-Checked Locking.
+✅ Java Enum can also be used to create Singleton (most robust way).
+--------------------------------------------------------------------------------------------------------------
+Overloading(compile-time polymorphism)(Static-binding) VS Overriding(Runtime polymorphism)(Dynamic-Binding)
+-Static, final, and private methods can be overloaded but not overridden.
+-Access Modifier Can be anything for overloading but can't reduce visibility for overriding
+Use @Override to avoid accidental overloading when you mean to override.
+1️⃣  Can static methods be overridden?
+❌ No, they are hidden, not overridden.
+If you define a static method in child with same name, it’s called method hiding — resolved by reference type, not object.
+2️⃣ Can you overload main() method in Java?
+✅ Yes, you can overload main(), but only the standard public static void main(String[] args) is used as entry point by JVM.
+3️⃣ What happens if I override a method and change the return type?
+✅ It’s allowed only if return type is covariant, meaning the child return type is a subclass of the parent’s return type.
+3️⃣ What happens if I override a method and change the return type?
+✅ It’s allowed only if return type is covariant, meaning the child return type is a subclass of the parent’s return type.
+covariant: In overriding, you can return a more specific type, not a more general one.
+In method overriding, the child class can return a more specific (child) type than the parent class method.
+Parent says: “I’ll return any Animal.”
+Child says: “I’ll return a Dog, which is also an Animal.”
+So Java says: “Cool, that works!”
+ 2. Can we override private or final methods?
+Private? ❌ No, because it's not visible in subclass.
+Final? ❌ No, final means “cannot be changed”.
+✅ “Private methods are not inherited, so overriding isn’t possible. Final methods are designed to prevent overriding.”
+🔸 4. What is the output?
+class A {
+    void display() { System.out.println("A"); }
+}
+class B extends A {
+    void display() { System.out.println("B"); }
+}
+
+public class Test {
+    public static void main(String[] args) {
+        A obj = new B();
+        obj.display();
+    }
+}
+Output? ➡️ B
+✅ "This is runtime polymorphism — method is overridden, and resolved based on actual object type."
+🔸 5. What if we call a subclass-only method?
+
+class A {}
+class B extends A {
+    void custom() { System.out.println("Custom B"); }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        A obj = new B();
+        obj.custom(); // valid?
+    }
+}
+➡️ Compile-time error!
+Because custom() isn’t in class A.
+✅"In polymorphism, the reference type controls accessible methods. So unless you downcast, subclass-only methods can’t be accessed."
+
+🔸 6. Can polymorphism apply to fields?
+class A {
+    int x = 5;
+}
+class B extends A {
+    int x = 10;
+}
+
+public class Main {
+    public static void main(String[] args) {
+        A obj = new B();
+        System.out.println(obj.x);
+    }
+}
+➡️ Output: 5
+✅ "Fields are not polymorphic — they're resolved at compile-time via reference type. Unlike methods, no overriding happens."
+
+🔸 3. Is constructor polymorphism?
+"Constructors support overloading but not overriding, so they are not polymorphic."
+🚫 Constructors Can’t Be Overridden — That’s Why They’re Not Polymorphic
+🔍Because constructors are not inherited, and overriding requires inheritance + same method signature + different behavior.
+-Resolved at	-> method for Runtime (for overridden) -> constructor at Compile-time
+
+🔧“Constructors support overloading but not overriding, so they are not polymorphic.”
+We mean:
+-You can have multiple constructors in a class (overloading ✅)
+-But you cannot override a constructor in a subclass — no runtime polymorphism there ❌
+class Parent {
+    Parent() {
+        System.out.println("Parent constructor");
+    }
+}
+
+class Child extends Parent {
+    Child() {
+        System.out.println("Child constructor");
+    }
+}
+
+public class Test {
+    public static void main(String[] args) {
+        Parent obj = new Child(); // which constructor runs?
+    }
+}
+➡️ Output:
+Parent constructor  
+Child constructor  
+But this is not polymorphism. Java is not calling the constructor based on obj’s type — it simply runs both constructors during object creation.
+
+✅ Overriding = Polymorphism
+❌ Constructors can’t be overridden
+➡️ Therefore, constructors ≠ polymorphic
+
+🔸 7. Can abstract classes and interfaces use polymorphism?
+Yes! In fact, interfaces and abstract classes are designed to enable polymorphism.
+✅ "Yes, both abstract classes and interfaces allow polymorphic behavior by letting different subclasses provide specific implementations."
+---------------------------------------------------------------------------------------------------------------------------
+Inheritance: supports code reusability, extensibility,  polymorphism.
+-Java allows access to only those methods that exist in the reference type (unless you downcast).
+overridden methods exhibit runtime polymorphism — the method call is resolved at runtime based on the actual object type, not the reference type. But method availability is still checked at compile-time based on the reference."
+-When the method is overridden, Java uses runtime polymorphism to execute the method from the actual object type.
+But if it’s not overridden, the base class method is used — still resolved at runtime, but no polymorphism behavior takes place.
+🧱When a child class is created, parent constructor is always called first — either explicitly or implicitly using super().
+    -Because the parent part of the object must be constructed before the child part.
+🔥 Multilevel → Chain of inheritance.
+  Hierarchical → One parent, many children.
+  single → One child inherits one parent
+  Multiple → One class inherits from multiple
+  Hybrid → Mix of two or more types
+💎multiple inheritance, when two parent classes have a method with the same name, and a child inherits both.
+❓ Now the child doesn’t know which method to inherit — Parent1 or Parent2?
+  This confuses the compiler(ambiguity) — that's the diamond problem.
+🔁 Why It’s Called “Diamond”?
+      A
+     / \
+    B   C
+     \ /
+      D
+-D inherits B and C
+-B & C inherit A
+-If A, B, and C define the same method — which one does D use? ➡️ Diamond Problem.
+✅Java doesn’t support multiple inheritance with classes to avoid ambiguity — known as the Diamond Problem — but handles it using interfaces, where conflicts must be explicitly resolved by the class. In interface-✅ No ambiguity — Java forces you to override.
+
+💡Java supports multiple inheritance via interfaces, and if both interfaces have same method, the implementing class must override and resolve conflict using InterfaceName.super.method().
+-Java does not support multiple inheritance using classes, but similar behavior can be achieved using abstract classes and composition or interfaces.
+   In Java 7 or below, you can’t have method bodies in interfaces. So to simulate multiple inheritance, we use abstract classes + composition instead of inheritance.
+
+Composition means “HAS-A” relationship, where a class contains an object of another class instead of extending it.
+💡 Instead of saying "Class A is a B" (which is inheritance),
+We say "Class A has a B" — that's composition.
+In Java 8 and above, interfaces can have:
+-default methods (with body)
+-static methods (with body)
+-abstract methods (without body)
+---------------------------------------------------------------------------------------------------------------------------------------
+Abstract Class Vs Interface:
+-Both used to achieve abstraction( hiding the complex implementation and showing only the essential details.)
+🧠 Think like this:
+Abstract Class		Interface
+A partial structure	A pure promise
+Has some code written	Has no code written (usually)
+Can have variables	Can’t have real variables (only constants)
+Can inherit only one	Can use many
+Used when classes are related Used for capabilities
+🟨 Interface vs Abstract Class (Quick View)
+Feature				Abstract Class		Interface		
+Can have abstract methods?				✅ (default)						✅
+Can have method bodies?					✅ (via default, static)		✅
+Can have constructors?					✅									❌
+Multiple inheritance?					❌									✅	
+Can have static methods?				✅ Yes							✅ Yes (Java 8+)
+Can have final methods?					✅ Yes							❌ No (methods are implicitly abstract unless default or static)
+Can implement interfaces?				✅ Yes							❌ Cannot implement, but can extend other interfaces
+Can extend other classes?				✅ Yes (only one class)			❌ Cannot extend classes, only interfaces
+Can be instantiated?					❌ No								❌ No
+Can have abstract methods?				✅ Yes							✅ Yes (implicitly abstract)
+Can have concrete methods?				✅ Yes							✅ Yes (default, static) from Java 8
+Multiple inheritance support?		❌ No								✅ Yes (multiple interfaces)
+Field types allowed?					Any (private, protected, etc.)	Only public static final (constants)
+Access modifiers for methods?			Any (public, protected, etc.)	Only public (implicitly)
+Usage				Partial abstraction + 	    Full abstraction + multiple behavior sharing
+				common code reuse	
+
+Fields allowed	Only public static final	Any (public/protected etc.)
+🔷 Abstract Class
+-Cannot be instantiated (you can't create an object of it).
+-Can have abstract methods (methods without a body) and concrete methods (with implementation).
+-used when classes are similar in nature and share some common code.
+🔹 Abstract Method
+-Declared without a body.
+-Must be overridden in the subclass (unless the subclass is also abstract).
+
+🧱 Abstract Class:= Common Parent with Shared Code
+-I can create an abstract class Vehicle with a common method like start(), and force each vehicle to define its own drive() method.
+-✔ Can have constructors
+-Can have any type of variable
+❌ Multiple inheritance Not supported (only one class)	
+
+🔷 Interface in Java?
+An interface is a contract — it defines what a class must do, not how it does it.
+It contains abstract methods by default.
+A class that implements an interface must provide concrete definitions of those methods.
+-To allow multiple inheritance of type (Java doesn’t support multiple class inheritance, but interfaces help).
+From Java 8+, interfaces can also have:
+default methods (with body)
+static methods (with body)
+From Java 9+, they can have private methods (for internal reuse).
+
+🧱 Interface: = Rulebook or Instruction List
+-Any class that wants to do a certain job must follow these rules
+-I create an interface Flyable, and any class that wants to fly will implement it and define how to fly.
+-❌ Cannot have constructors
+-Only public static final (constants)	
+-✔ Multiple inheritance Supported (can implement multiple)
+	
+✅ 1. Partial Increment vs Scratch (Conceptual)
+🧱If I’m working on something partially built — like a system that already has some fixed structure or behavior — then I use an abstract class. It lets me reuse existing logic (like constructors, methods, etc.) and customize the rest.
+🧱But if I’m creating something completely new from scratch, where there’s no base implementation available, I use an interface. It gives me full freedom to design the rules, and forces the class to implement everything from zero.
+🔹 Abstract Class – When something already exists, and I want to extend or partially build on it (reuse + customize).
+🔹 Interface – When I’m starting from scratch, and just want to define rules/structure with no existing logic.
+✅ 2. Real Use Case (Encryption & DB)
+🔸 Suppose I’m handling user data for multiple databases like MySQL, MongoDB, and PostgreSQL.
+Now, if encryption logic is the same for all, and only the DB saving logic changes — I’ll put encryption in an abstract class (because it's common) and make the DB save method abstract (force DB classes to define).
+🔸 But if I want to allow completely different encryption styles (AES, SHA, etc.) — independent of DB — then I’ll use an interface for encryption. It makes sure whoever uses it must implement the encrypt() method, but lets them do it in their own way.
+🔹 Abstract Class – When common logic like encryptPassword() is shared, and DB logic changes per class.
+🔹 Interface – When even encryption logic is flexible, and every class should implement it their own way.
+
+👉 So to clarify:
+-abstract method = no body
+-default method = has body
+-But both can exist in interfaces, not in abstract classes.
+
+
+1. Can we instantiate an abstract class?
+No, but you can have a constructor, and it’s called when a subclass is instantiated.
+
+2. Can an abstract class have a main() method and be run?
+Yes. The main() method is static, so it doesn’t need object creation.
+
+Q1. Can an abstract class implement an interface without implementing its methods?
+Yes, an abstract class can implement an interface partially. It’s not required to implement all methods immediately — the concrete subclass will be forced to implement them.
+abstract class Test {
+    public static void main(String[] args) {
+        System.out.println("Running abstract class main()");
+    }
+}
+
+3. Can an abstract class have a constructor?
+Yes. It is used to initialize common fields and is called during subclass construction.
+
+2. Can an interface have fields?
+Yes, but only:public static final
+Which means:They are constants, not instance variables.
+
+4. Can an abstract class be final?
+No. A class cannot be both abstract and final because:
+--abstract says "must be extended"
+--final says "cannot be extended"
+
+5. What happens if a subclass doesn't implement all abstract methods?
+Then the subclass must also be declared abstract.
+
+6. Can abstract methods be private?
+No, because abstract methods must be overridden, and private methods are not visible to subclasses.
+
+7. Can abstract methods be static or final?
+No, because:
+-static methods belong to class, not instance — so overriding doesn’t make sense.
+-final methods cannot be overridden — which defeats the purpose of abstraction.
+
+Q2. What happens if you add a new method to an interface in a large codebase?
+This will break all the classes implementing the interface.
+To avoid this, Java 8 introduced default methods in interfaces so new methods can be added with default behavior without breaking existing code.
+
+Q3. Can you create an object of an abstract class or interface?
+No, both cannot be instantiated directly. But we can use anonymous inner classes, or create objects of concrete subclasses.
+
+Q.4Can an interface extend another interface?
+Yes! An interface can extend another interface (even multiple), but it cannot implement another interface or extend a class.
+
+5. Can a class be abstract without having any abstract methods?
+Yes, sometimes a class is marked abstract just to prevent instantiation or to provide base behavior, even without abstract methods.
+
+4. Interface Can you override default methods?
+✅ Yes, in the implementing class.
+
+5. What if two interfaces have default methods with the same signature?
+⚠️ You must override it in the implementing class to resolve conflict.
+
+6. Can you make a method in an interface private?
+✅ Yes, from Java 9 onward, only private and private static methods are allowed for internal code reuse inside interfaces.
+
+7. Can a class implement multiple interfaces?
+✅ Yes. This is how Java supports multiple inheritance of type.
+8. Can an interface extend a class?
+❌ No. An interface can only extend other interfaces.
+
+❓Can an Interface extend or implement a Class?
+❌ No, an interface cannot extend or implement a class.
+Interfaces can only extend other interfaces.
+They cannot extend or implement any class.
+🧠Because:
+-interface is not a class, it’s a contract or rule.
+-It’s designed to be implemented by classes, not to depend on them.
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+🔸 Why Default Methods Were Introduced?
+Before Java 8, adding a method to an interface meant breaking all implementing classes.
+Default methods solve this by letting you add new methods with default behavior, without affecting existing implementations.
+1. What happens if two interfaces have the same default method?
+👉 You must override it in the implementing class.
+2. Can default methods access private methods?
+✅ Yes (since Java 9). Interfaces can have private methods used by default methods internally.
+--------------------------------------------------------------------------------------------------------------------------------
+Q: Why use marker interface when you can use annotations?
+✅ Marker interfaces are type-safe — they can be used in instanceof checks and generic bounds (T extends Serializable).
+interface that has no methods or fields — it’s empty
+purpose is to mark a class for some special behavior handled by the JVM or frameworks.
+Annotations offer more flexibility, but they are not types — can't be used with instanceof.
+-----------------------------------------------------------------------------------------------------------------------------------------------
+Shallow copy Vs Deep copy:
+Feature			Shallow Copy						Deep Copy
+What it copies		Only top-level object, not nested objects			Top-level + nested objects also cloned
+Object references	Copies object references, not actual nested objects		Creates new copies of all nested objects
+Default in clone()?			✅ Yes																  ❌ No (must be implemented manually)
+Performance		Faster, less memory usage					Slower, more memory (but safer)
+Use case			When object is immutable or inner objects won’t change	When complete independence from original is required
+
+In shallow copy:
+-p1 and p2 are two different Person objects ✅
+-But they both reference the same Address object inside ❌
+e.g
+Person p1 = new Person("John", new Address("Delhi"));
+Person p2 = p1.clone(); // shallow copy
+
+System.out.println(p1 == p2); // ❌ false – different Person objects
+System.out.println(p1.address == p2.address); // ✅ true – same Address object
+💡 Why?
+Because super.clone() creates a new object (i.e., a new Person), but does a bitwise copy of fields.
+
+Primitive fields (like int, boolean) → values are copied.
+
+Object references (like Address) → reference is copied, not the object.
+
+So now both p1.address and p2.address point to the same Address.
+
+Part	Shallow Copy	Deep Copy
+p1 == p2	false (different Person objects)	false
+p1.address == p2.address	true (same inner object)	false (inner object also cloned)
+💡 Analogy:
+Shallow Copy = Copying a document with a link to a file.
+Deep Copy = Copying a document and also duplicating the actual file.
+🔥Default clone() in Java does shallow copy. For deep cloning, you must manually clone nested objects, or use serialization or third-party libraries.
+
+1️⃣ Does clone() call the constructor?
+❌ No!
+It creates a new object without invoking any constructor.
+super.clone() performs a bitwise memory copy (shallow copy).
+2️⃣ What will be the output?
+class A implements Cloneable {
+    int[] arr = {1, 2, 3};
+
+    public A clone() throws CloneNotSupportedException {
+        return (A) super.clone();
+    }
+}
+
+A a1 = new A();
+A a2 = a1.clone();
+a2.arr[0] = 99;
+System.out.println(a1.arr[0]);
+✅ Output: 99
+Because the array is shared between a1 and a2 → shallow copy.
+3️⃣ Can clone() be used for deep copy?
+✅ Yes — but only if you manually override clone() to also clone all nested objects.
+
+5️⃣ What are alternatives to clone()?
+-Copy constructors
+-Serialization (deep copy)
+-3rd party libraries (Apache Commons SerializationUtils.clone())
+
+⚠️ Why clone() is not recommended in modern Java?
+-It breaks encapsulation (Object class knows internals of all subclasses)
+-Not flexible — doesn’t work well with final fields, immutable design
+-Easy to mess up shallow vs deep copy
+✅ Instead, Java devs prefer:
+-Copy constructors
+-Factory methods
+-Builder pattern
+---------------------------------------------------------------------------------------------------------------------------
+🔍 Is String Thread-Safe?
+✅ YES, String is thread-safe, but for a different reason than StringBuffer.
+
+❓ Why it’s thread-safe:
+Because String is immutable.
+
+If an object can’t be changed, then multiple threads can safely use it without worrying about one thread modifying it while another is reading it.
+String name = "Java";
+// Safe to share across threads because it can’t be changed
+So technically:
+🟢 String is thread-safe because it’s immutable.
+🔴 But it does not use synchronization like StringBuffer.
+-----------------------------------------------------------------------------------------------------------------------
+throw creates the exception object, but checked exceptions require either a throws declaration or a try-catch block. **Unchecked ones don’t.
+❓ Can we use throw without throws?
+✅ Yes — but only for unchecked exceptions.
+❌ No — for checked exceptions, you must declare throws or handle it with try-catch.
+------------------------------------------------------------------------------------------------------------------------------------------------
+Lambda Expressions: Anonymous functions that reduce boilerplate code, especially for functional interfaces.
+"Can lambdas access local variables?"
+→ Yes, but they must be effectively final.
+------------------------------------------------------------------------------------------------------------------------------------------------
+Functional Interface: 
+ * @FunctionalInterface = compiler enforces exactly one abstract method
+ * No annotation = Java allows multiple abstract methods but with this java doesn't allow lambda expressions
+https://github.com/pratikshay99/CodeCruncher/commit/d48ee4f989fe4ce0b3780df60c293ac0ca733672
+https://github.com/pratikshay99/CodeCruncher/commit/6ae154ef8a2a52953cbf1d7b9cec69869aa2a3c3
+----------------------------------------------------------------------------------------------------------------------------------------------
+Collectors utility:
+ Stream.toList() (Java 16 onwards):
+     e.g.   List<String> result = stream.toList();
+        -Returns an immutable list
+        -Immutable list: You cannot add(), remove() to it
+        -Throws UnsupportedOperationException if you try to modify
+ 🔹 Collectors.toList()
+     e.g   List<String> result = stream.collect(Collectors.toList());
+         -Returns a mutable list – you can modify it later
+         -Supported since Java 8
+         -Works well in collector chaining (e.g., with groupingBy(), mapping())
+----------------------------------------------------------------------------------------------------------------------------------------------
+List: Maintains insertion order	: Elements appear in the order you added them.
+java.util.Collection (interface)
+   └── java.util.List (interface)
+        ├── ArrayList
+        ├── LinkedList
+        ├── Vector
+        └── Stack
+🔹Feature			Meaning
+Ordered			Maintains insertion order
+Duplicates allowed	You can add the same element multiple times
+Indexed access		You can use get(index) to retrieve or update elements
+Null elements allowed	You can store null values
+Generics supported	You can specify the type of elements (e.g., List<String>, List<Integer>)
+
+🔹Method		Use Case				Example
+add(E e)					Add an element							list.add("A");
+add(int index, E e)		Insert at position						list.add(1, "B");
+get(int index)			Access element							list.get(0);
+set(int index, E e)		Replace element							list.set(0, "Z");
+remove(int index)		Remove by index							list.remove(0);
+remove(Object o)			Remove first occurrence				list.remove("A");
+indexOf(Object o)		First index of element					list.indexOf("B");
+lastIndexOf(Object o)	Last index of element					list.lastIndexOf("B");
+contains(Object o)		Check if element exists				list.contains("A");
+isEmpty()					Check if list is empty					list.isEmpty();
+size()						Total number of elements				list.size();
+🧠 Interview Tip
+-set(): modifies by index
+-replaceAll(): is great for bulk replacement using a lambda
+-Never use add(index, value) for replacing — that shifts elements instead
+
+🧠Class			Key Features
+ArrayList	Backed by an array; fast random access (O(1)), slow inserts/removals in the middle (O(n))
+LinkedList	Doubly linked list; faster inserts/deletes (O(1)) but slower access (O(n))
+Vector		Legacy; similar to ArrayList but synchronized
+Stack		Subclass of Vector; LIFO structure (use push(), pop())
+Interview Tip:
+-Prefer ArrayList when frequent read access.
+-Prefer LinkedList for frequent insertions/removals.
+❓ Q: ArrayList vs LinkedList?
+     ArrayList: fast random access, slow insertion/deletion
+     LinkedList: fast insertion/deletion, slow access
+
+ ❓What happens if you access an invalid index?
+    list.get(100); ➜ IndexOutOfBoundsException
+
+ ❓Can a List contain null values?
+    Yes! (e.g., list.add(null); is valid)
+
+ ❓Difference between list.remove(1) and list.remove("1")?
+    One removes by index, the other by object — and overloaded method confusion can lead to bugs.
+
+ ❓How do you make a List immutable?
+    List<String> immutable = Collections.unmodifiableList(new ArrayList<>(list));
+------------------------------------------------------------------------------------------------------------------------------------------------
+ArrayList:
+-resizable array implementation of the List interface
+-Maintains insertion order
+-Allows duplicates and null values
+-Provides random access via index (get(index))
+-Internally backed by a dynamic array
+-When you create an ArrayList, it creates an array of default size (usually 10).
+-When the array fills, it resizes itself to 1.5x the current size.
+🔹 Resize Mechanism
+int newCapacity = oldCapacity + (oldCapacity >> 1); // i.e. 1.5x growth
+So if capacity is 10 → next becomes 15 → then 22 → 33 → ...
+toArray():	Convert to standard array
+🔐 Thread-Safety: ❌ ArrayList is not thread-safe.
+❌ Problem:
+-If multiple threads modify a normal ArrayList at the same time, you may get:
+-ConcurrentModificationException
+-Data inconsistency
+-Unexpected results
+✅ Solution 1: Use Collections.synchronizedList(...): Wrap the list to make it synchronized.
+✅ Solution 2: Use CopyOnWriteArrayList
+
+ ✅ 1. Collections.synchronizedList(...) 📌 Use when:
+     -You want to share a list between threads
+     -You need frequent writes/modifications
+     -You don’t mind using synchronized blocks during iteration
+ ⚠️ BUT:
+    -You must manually synchronize during iteration to avoid ConcurrentModificationException
+ 
+ ✅ 2. CopyOnWriteArrayList: 📌 Use when:
+    -Your app is read-heavy, write-light
+    -You want safe iteration without any locking
+    -You want to avoid manual synchronized blocks
+ ⚠️ BUT:
+   -Each write creates a new copy → memory & performance cost
+    -Avoid if frequent add/remove
+ 
+ ✅ 3. Iterator with iterator().remove()📌 Use when:
+    -You’re looping through any collection
+    -You want to remove elements while iterating
+ ⚠️ Don’t use list.remove(...) inside for-each
+-------------------------------------------------------------------------------------------------------------------------------------------------
+Set:No duplicates allowed, unordered, Null values: Allowed
+Uniqueness Guarantee:
+-You cannot store the same element twice.
+-Equality is checked using equals() method (for logical equality).
+Order is not guaranteed (depends on implementation)
+Set can contain one null element (only in some implementations).
+-So if you're designing a class to be stored in a Set, override equals() and hashCode() properly.
+when to use: to prevent duplicates, to model a mathematical set (like union, intersection, etc.),to test membership efficiently.
+
+🔶 Interfaces & Implementations
+
+Interface	Description
+Set		Base interface
+HashSet		Fast, unordered, Backed by HashMap;  uses hashCode() & equals()
+LinkedHashSet	Maintains insertion order
+TreeSet		Sorted in natural/custom order (uses TreeMap internally) backed by Red-Black Tree
+
+-Use HashSet for fast lookup.
+-TreeSet for sorted, unique elements.
+
+🔸 Set vs Collection
+Even though Set extends Collection, it strengthens the contract:
+-Collection allows duplicates.
+-Set prohibits duplicates.
+So, it's like a specialized Collection designed purely for uniqueness.
+🧠 Conceptual Depth: What Makes an Element "Duplicate"?
+-A Set relies on logical equality(.equals()), not reference equality(=).
+-So two different objects with the same content (as defined by equals()) are considered duplicates.
+
+
+🎯 Summary
+
+Check		What it Does
+==		Checks memory address (reference equality)
+equals()	Checks content (logical equality)
+HashSet		Uses hashCode() + equals() to enforce uniqueness
+
+🎯Even if the second "Hello" is a completely new object, it's considered a duplicate because:
+	new String("Hello").equals("Hello") == true
+
+
+Method                      				| Purpose
+add(E e)                    				| Adds an element if not already present
+remove(Object o)            		| Removes a specific element
+contains(Object o)           	| Checks if element exists
+size()                      				| Returns number of unique elements
+iterator()                  			| For traversing the Set
+clear()                    		 		| Empties the set
+addAll(Collection c)     	 	| Union of two sets
+retainAll(Collection c)     | Intersection
+removeAll(Collection c)     | Difference
+equals(Object o)           	 	| Compares two sets
+isEmpty()                   			| Checks if set is empty
+
+🚨 Common Developer Mistakes
+Mistake	-> Why it matters
+Not overriding equals() and hashCode() in custom objects ->	Causes unexpected duplicates in Set
+Using mutable objects in a Set -> Can break internal integrity; the Set may "lose" the object
+Assuming order in a Set ->	Order is not guaranteed unless specified by the implementation
+----------------------------------------------------------------------------------------------------------------------------------
+Map: 
+-not a subtype of the Collection interface(separate hierarchy in the Java Collections Framework)
+-Storing key-value pairs, where each key maps to exactly one value,Keys are unique, values can be duplicated.
+-No duplicate keys: Adding a key that already exists will overwrite its value.
+-One null key & Multiple null values are allowed.
+-If you want to preserve order, use LinkedHashMap, other type of Map doen't follow insertion order.
+-map.put("name", "Alice");
+map.put("name", "Bob"); // Key "name" not duplicated, only replaced
+e.g real-world dictionary:
+look up a word (key), &  get its definition (value), can’t have same word defined twice, But multiple words can have same definition.
+✅ Use entrySet() when:
+You need both the key and the value in your loop.
+✅ Use keySet() when:
+You only need keys and don't care about values.
+
+Without equals() and hashCode(), the map will treat them as different keys — big mistake!
+Map<Person, String> people = new HashMap<>();
+people.put(new Person("101"), "Alice");
+people.put(new Person("101"), "Bob"); // Overwrites because equals() returns true
+
+❓ “Why would you prefer entrySet() over keySet() when iterating a Map?”
+- prefer entrySet() when I need both the key and value during iteration, because it avoids the overhead of calling get(key) for each key.
+-With keySet(), accessing values requires an extra lookup (map.get(key)), which can be inefficient — especially for large maps or maps with slower lookup times like TreeMap.
+-entrySet() gives direct access to the key-value pair in a single step, making it more efficient and cleaner.
+💡 Also, in concurrent or synchronized maps, using entrySet() minimizes the chance of race conditions, since there's no separate get() call — everything is accessed atomically from the entry.
+💡 Tricky Notes
+-get("unknown") returns null, but you can't tell if it's a missing key or a key mapped to null. Use containsKey() to confirm.
+-entrySet() gives full control over both key and value while iterating.
+-Mutating the key object after insertion (if using custom objects as keys) will break the map.
+
+Map Type                | Insertion Order Maintained? 
+HashMap                 | ❌ No | Order is unpredictable
+LinkedHashMap | ✅ Yes | Maintains insertion order
+TreeMap                 | ❌ No | Orders by key (sorted)
+ConcurrentHashMap       | ❌ No | Focused on concurrency
+----------------------------------------------------------------------------------------------------------------------------------
+-partial increment... kuch new chiz ko new develop kr rhi h uske kuch paramteres pre-defined rhenge to abtract... method impl..contsructor
+
+interface new se bana rhe h core level p nhi hoga... interface m khudse bnan pdega...
+partial incrementation, from scratch se create, core level kuch nhi h available us level p interface ...
+3 db---- interface... encrypt pwd vgere.. encrypt pwd db dependant nhi rhega to... implement krna hi pdega... db dependancy nhi h... key same rhega to abstract classs 
+
+encrypt pwd la feature dega... connectivity k logic db ke hisab se milega... encypt rkhenge abstract...
+
+
+1 base class superclass 
+this aur super
+-----------------------------------------------------------------------
+callable, runnable, comparator,comparable, how to create immutable class, collection vs Collections, Generics,Example: Runnable, Callable, Comparator, or custom ones with @FunctionalInterface. 91. Difference Between map() and flatMap()?
+
+
+
+
+springboot, coding practice
+
+Java Developer-Springboot,ANGULARJS2,Microservices API Management,Java
