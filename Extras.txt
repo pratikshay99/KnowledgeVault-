@@ -1,87 +1,8 @@
-When we say "Static methods belong to the class, not an object," it means:
-Static methods are associated with the class itself, rather than any specific instance (object) of the class.
-They can be called using the class name without creating an object.
-They cannot access instance variables or methods directly because those require an object
+Reminder: NPCI BHIM Hiring Test - Basic (Backend) invite
+NPCI (BHIM) : Job Opening - Backend Developer (Java) - NPCI BHIM Services Ltd. (NBSL) - Mumbai/Hyderabad
 
 
-Wrapper Classes in Java
--convert primitive data types into objects. 
--provide way to use primitives in object-oriented contexts where objects are required, such as collections, serialization, and multithreading.
--✔ Useful in Collections: ArrayList<Integer> instead of int[]
-✔ Provides Utility Methods: Integer.parseInt("123"), Double.valueOf("3.14"), etc.
-
-
-Autoboxing and Unboxing allow automatic conversion between primitive data types and their corresponding wrapper classes.
-
-/*
-🚨 Never use return inside finally unless you intentionally want to override all previous return values.
-  🚨 If the finally block also has a return statement, it overrides any previous return from try or catch
-------------------------------------------------------------------------------------------------
-✔ Always executes, regardless of exceptions
-✔ Used for cleanup operations like closing resources
-✔ Does not execute only if JVM exits (System.exit(0))
-✔ Runs even when return is present in try or catch
-✔ finally executes before returning the value from try/catch.
-✔ If finally has a return, it overrides all previous return values.
-✔ Best practice: Avoid using return in finally to prevent confusion.
-✅ Even though return is in try, finally still runs before returning.
--------------------------------------------------------------------------
-Scenario	                    finally Executed?	Explanation
-------------------------------------------------------------------------------
-No exception occurs	                     ✅          	Runs after try
-Exception occurs & caught	             ✅          	Runs after catch
-Exception occurs & not caught	         ✅          	Runs before the program terminates
-Return statement in try/catch	         ✅          	Runs after return
-System.exit(0) is called	             ❌             JVM shuts down immediately
--------------------------------------------------------------------------------------
-🔥Understanding finally with return
-🌟 When a method contains a try-catch-finally block with return, the execution follows this order:
-    1. try executes → If no exception, moves to return inside try.
-    2. Before returning the value, finally executes.
-    3. After finally completes, the method returns the value from try or catch.
--------------------------------------------------------------------------------------------------
-✔ finalize() was used for cleanup before GC but is deprecated in Java 9+.
-✔ Not reliable – May never run or cause delays.
-✔ Use try-with-resources or explicit close() instead
-----------------------------------------------------------------------------
-✔ static Variables → Shared across all objects.
-✔ static Methods → Can be called without an object, only access static variables & methods (not instance variables
-✔ static Blocks → Runs once when class loads.
-✔ static Classes → Inner classes that don’t need an instance.
-✔ Static block runs first (before the main method).
-✔ Static methods are hidden, not overridden.
-✔ Static nested classes can have a main method.
-✔ Static blocks can't access non-static variables.
-✔ Static constructors are not allowed.
-✔ Interfaces can have static methods (since Java 8).
-✔ Static methods belong to the class, not objects.
------------------------------------------------------------------------------------------------------------------------
-this: Refers to current class instance.
-super: Refers to parent class members.
-
-this:
-If a method parameter has the same name as an instance variable, Java gives priority to the local variable. this helps differentiate them.
-You don’t always need this, but it’s useful in these cases: ✔ Avoids confusion when local and instance variables have the same name.
-✔ Helps call another constructor inside the same class (constructor chaining).
-	-It calls another constructor inside the same class, avoiding repeated initialization logic.
-✔ Sometimes, we need to Pass the current object as an argument to a method or constructor.
---------------------------------------------------------------------------------------------------------------------------------
-1️⃣ Uses of super in Java
-🧠 Even though we didn’t write super() in Child, Java added it automatically at the top of the Child constructor.
-Use Case						Description
-Access Parent Class Variables	Used when the child class has a variable with the same name as the parent class.
-Call Parent Class Methods		Used to call a method from the parent class when overridden in the child class.
-Call Parent Class Constructor		Used to invoke a constructor of the parent class to reuse initialization logic.
-------------------------------------------------------------------------------------------------------------------------------
-✅ Quick Notes:
-Parent p = new Child(); → Polymorphism
-    -You can only call parent methods (unless overridden).
-    -Overridden methods from Child are called at runtime.
-
-Child c = new Child();
-    -You get full access to both parent and child features.
 ----------------------------------------------------------------------------------------------------------------------------
-Modifiers in Java are keywords that change the behavior or visibility of classes, methods, variables, or constructors.
 1️⃣ Access Modifiers — Who can access it?	= Who can use it?	(e.g. public, private)
 2️⃣ Non-Access Modifiers — What kind of behavior? = What special powers it has	(e.g. static, final, abstract)
 ✅ On Classes
@@ -840,6 +761,12 @@ HashMap                 | ❌ No | Order is unpredictable
 LinkedHashMap | ✅ Yes | Maintains insertion order
 TreeMap                 | ❌ No | Orders by key (sorted)
 ConcurrentHashMap       | ❌ No | Focused on concurrency
+
+🧠 If sorting a map by values where null values might be present, always use a null-safe comparator, or else risk NullPointerException during sorting!(or skips nulls instead of sorting them first.)
+----------------------------------------------------------------------------------------------------------------------------------
+Java’s built-in LinkedList is a Doubly Linked List.
+
+
 ----------------------------------------------------------------------------------------------------------------------------------
 -partial increment... kuch new chiz ko new develop kr rhi h uske kuch paramteres pre-defined rhenge to abtract... method impl..contsructor
 
