@@ -9,9 +9,9 @@ Cacheable: Responses must define whether they are cacheable.
 Uniform Interface: Resource identification via URIs and consistent usage of HTTP methods.
 Client-Server Architecture: Separation of concerns between client and server.
 Layered System: Multiple layers of servers may exist between client and server.
-======================================================================================================================================================================
+========================================================================================================================================================
 request/response <-> Controller(Presentation layer): accept requests<-> Service Layer(main Logical) <-> Dao/Repository layer <-> DB
-======================================================================================================================================================================
+========================================================================================================================================================
 Without explicit status codes:
 Default status codes may not reflect the actual outcome. For example:
 Returning 200 OK when a record wasn't found (instead of 404 Not Found) might mislead clients
@@ -20,70 +20,239 @@ With explicit status codes:
 Appropriate codes like 404 Not Found or 400 Bad Request are used, improving clarity.
 Clients (and automated systems) can rely on status codes to make decisions (e.g., retries, error handling).
 Proper status codes help testers and developers identify issues quickly.
-======================================================================================================================================================================
+========================================================================================================================================================
 **HTTP methods:
-GET: Retrieve data from the server.
-POST: Create a new resource on server.
-PUT: Update an existing resource or create if it doesn't exist.
-PATCH: Partially update an existing resource.
-DELETE: Remove a resource from the server.
-======================================================================================================================================================================
+GET: Retrieve data from the server, safe and idempotent.
+POST: Create a new resource on server, not idempotent.
+PUT: Update an existing resource or create if it doesn't exist, idempotent
+PATCH: Partially update an existing resource, idempotency depends on implementation
+DELETE: Remove a resource from the server, idempotent
+========================================================================================================================================================
+**What is Idempotency/Itempotent?
+Idempotent operations produce the same result no matter how many times they are executed.
+Examples: GET, PUT, DELETE.
+Non-idempotent example: POST (because it creates a new resource every time it's called).
+========================================================================================================================================================
 HTTP status codes indicate the outcome of a request:
 2xx (Success):
-200 OK: Request succeeded.
+200 OK: Request succeeded
 201 Created: A new resource was created.
+204 No Content (after DELETE).
 4xx (Client Error):
 400 Bad Request: Request is malformed(Domain validation errors, missing data)
 401 Unauthorized: Authentication required(missing or invalid authentication token.)
-403: Forbidden
+403: Forbidden (identity known but no permission)
 404 Not Found: Resource doesn't exist.
 5xx (Server Error):
 500 Internal Server Error: Server encountered an issue.
-======================================================================================================================================================================
-PUT: Updates the entire resource. If a field is missing in the payload, it will overwrite with null or default values.
-PATCH: Partially updates the resource, changing only the specified fields.
-======================================================================================================================================================================
+502 Bad Gateway, 503 Service Unavailable
+========================================================================================================================================================
+PUT: Updates/replaces entire resource with new version. If a field is missing in the payload, it will overwrite with null or default values.
+PATCH: Partially updates the resource, modifying only specified fields.
+========================================================================================================================================================
 How is authentication handled in REST APIs?
 API Keys: A unique key provided to the client.
 Token-based Authentication:
 JWT (JSON Web Tokens): A self-contained token that includes the user's details.
 OAuth2: A robust authentication protocol often used for third-party access.
-======================================================================================================================================================================
+========================================================================================================================================================
 Synchronous API: The client waits for a response before proceeding.
 Asynchronous API: The server sends the response later, allowing the client to continue other tasks (e.g., Webhooks or polling).
-======================================================================================================================================================================
+========================================================================================================================================================
 How do you handle versioning in REST APIs?
-Answer:
 
 URI Versioning: /v1/resource
-Header Versioning: Accept: application/vnd.api+json; version=1.0
+Header Versioning: using custom headers like Accept: version=2
 Query Parameter: GET /resource?version=1.0
-======================================================================================================================================================================
-
+========================================================================================================================================================
 11. How can you optimize REST API performance?
-Answer:
 
 Caching: Use response caching mechanisms like Redis or HTTP cache headers.
 Pagination: Avoid returning large datasets; use pagination, filtering, or sorting.
 Compression: Enable gzip or Brotli compression for responses.
 Minimize Latency: Optimize database queries and use connection pooling.
-Load Balancing: Distribute requests across servers.
+Load Balancing: Distribute requests across multiple servers.
+========================================================================================================================================================
+🔹 What is Caching?
+Caching means:
+“Store response so we don’t call server again” 
+- HTTP caching stores responses in the user’s browser and is not shared, while Redis caching stores data on the server and is shared across users unless configured per user.
+Without Caching ❌ Every request → goes to server
+With Caching ✅
+Server sends header:
+	Cache-Control: max-age=60
 
-======================================================================================================================================================================
-12. What are idempotent operations in REST APIs?
-Answer:
-Idempotent operations produce the same result no matter how many times they are executed.
+-Browser can reuse response for 60 seconds
+-No need to call server again
 
-Examples: GET, PUT, DELETE.
-Non-idempotent example: POST (because it creates a new resource every time it's called).
-======================================================================================================================================================================
+1st request → server called ✅  
+Next requests (within 60 sec) → from cache ✅  
+After 60 sec → server called again
+
+@GetMapping("/products")
+public ResponseEntity<String> getProducts() {
+
+    return ResponseEntity.ok()
+            .header("Cache-Control", "max-age=60")
+            .body("Product list");
+}
+
+| Header                    | Meaning             |
+| ------------------------- | ------------------- |
+| Cache-Control: max-age=60 | Cache for 60 sec    |
+| no-cache                  | always check server |
+| no-store                  | don’t cache         |
+
+🔹HTTP Cache Headers (Browser Cache)
+👉 By default → per user (per browser)
+Local to user
+Not shared
+🔹Redis Cache (Server-side Cache): 👉 Shared across ALL users (by default)
+	Centralized
+	Shared
+	Faster
+@Cacheable(value = "products")
+public List<Product> getProducts() {
+    return productRepository.findAll();
+}
+
+User A → first request → DB hit → stored in Redis  
+User B → next request → from Redis (fast)
+🔹 5. Can Redis be per user?
+ YES (advanced)
+
+If you use user-specific key:
+@Cacheable(value = "products", key = "#userId")
+👉 Then:
+User A → own cache  
+User B → own cache
+========================================================================================================================================================
+🔹 What is Pagination?
+We use pagination to handle large datasets efficiently and reduce load on backend and network.
+🔸 Without Pagination ❌
+GET /products
+
+👉 Returns all 100 → slow ❌
+
+🔸 With Pagination ✅
+GET /products?page=1&size=10
+
+👉 Returns only 10 products
+
+Page 1 → products 1–10  
+Page 2 → products 11–20  
+Page 3 → products 21–30  
+
+@GetMapping("/products")
+public List<String> getProducts(
+        @RequestParam int page,
+        @RequestParam int size) {
+
+    // Dummy example
+    return List.of("Product1", "Product2", "Product3");
+}
+}
+🔹 Real Example (Using Spring Data)
+@GetMapping("/products")
+public Page<Product> getProducts(Pageable pageable) {
+    return productRepository.findAll(pageable);
+}
+👉 Call like:
+
+/products?page=0&size=10
+========================================================================================================================================================
+🔹 1. Compression (gzip / Brotli): Make response size smaller before sending:
+Compression reduces response size using gzip or Brotli, improving network speed and performance
+Without compression: Response size = 100 KB
+
+With compression: Response size = 30 KB  👉 Faster to download ✅
+👉 Sending a zip file instead of full folder
+🔸 Simple config (Spring Boot)
+server:
+  compression:
+    enabled: true
+========================================================================================================================================================
+🔹 2. Minimize Latency(Latency = time taken to get response):
+Latency is reduced by optimizing queries and reusing database connections through pooling
+✔ Optimize DB query: Don’t fetch unnecessary data (SELECT * FROM users ❌ SELECT name FROM users✅)
+✔ Connection Pooling: Reuse DB connections instead of creating new every time
+========================================================================================================================================================
+12. How can you secure a REST API? 
+
+Key methods include using HTTPS/TLS for encryption, implementing OAuth or JWT for authentication, and using Rate Limiting to prevent DDoS attacks. 
+========================================================================================================================================================
 13. What are CORS and its significance in REST APIs?
-Answer:
+
 CORS (Cross-Origin Resource Sharing) is a security feature enforced by web browsers to restrict how resources on a server can be accessed from a different domain.
 
 It allows servers to specify which domains can access their resources using headers like Access-Control-Allow-Origin.
 
-======================================================================================================================================================================
+“CORS is a browser security mechanism that restricts cross-origin requests, and servers must explicitly allow other origins using headers
+It blocks requests when: Frontend and backend are on different domains
+🔸 Your Setup
+Frontend → http://localhost:3000  
+Backend  → http://localhost:8080
+👉 Your frontend tries:
+Call → http://localhost:8080/users
+
+❌ Without CORS
+Browser says: Blocked by CORS policy ❌
+👉 Because: Different origin (3000 vs 8080)
+
+✅ With CORS: Backend allows it:
+	Access-Control-Allow-Origin: http://localhost:3000
+🔹 Why CORS Exists?
+To prevent:
+	Malicious websites calling your APIs
+	Data theft
+
+🔹 1. Easiest Way (Annotation):Allows requests from localhost:3000,  Only for this controller
+
+@CrossOrigin(origins = "http://localhost:3000")
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @GetMapping
+    public String getUsers() {
+        return "Users data";
+    }
+}
+🔹 In Gateway
+
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+🔹 2. Global CORS (for all APIs):👉 Use this when you want to allow for entire app: Applies to: All controllers, All APIs
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000")
+                .allowedMethods("GET", "POST", "PUT", "DELETE");
+    }
+}
+
+🔹 3. With Spring Security:
+
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .cors()
+        .and()
+        .csrf().disable();
+    return http.build();
+}
+========================================================================================================================================================
 14. How do you handle errors in REST APIs?
 -Use meaningful HTTP status codes.
 -Return error details in the response body:
@@ -93,7 +262,7 @@ It allows servers to specify which domains can access their resources using head
   "message": "The 'username' field is required."
 }
 -Log server-side errors for debugging.
-======================================================================================================================================================================
+===========================================================================================================================================================
 
 Feature	     |	SOAP			REST
 ---------------------------------------------------------------------------
@@ -101,7 +270,7 @@ Protocol     |	Strict (uses XML)	Flexible (uses JSON, XML, etc.)
 Statefulness |	Stateful or stateless	Stateless
 Performance  |	Slower (heavy payloads)	Faster (lightweight)
 Complexity   |	High	Low
-======================================================================================================================================================================
+===========================================================================================================================================================
 16. How would you design an API for a social media app?
 1.Define resources: Users, Posts, Comments, Likes.
 2.Use appropriate endpoints:
@@ -110,4 +279,49 @@ POST /posts
 DELETE /comments/{id}
 3.Implement pagination for large data:
 GET /posts?limit=10&offset=20.
-======================================================================================================================================================================
+========================================================================================================================================================
+What is "Statelessness" in REST? Statelessness means the server does not store any client session context between requests. Every request must contain all information (like authentication tokens) needed to process it.
+👉Server does NOT store user session/data between requests
+👉 Every request must contain all required info
+🔸 Stateless ✅
+👉 Step 1: You login → get JWT token
+👉 Step 2:Every request → you send JWT
+👉 Now:
+Request → Server A → validates JWT ✅  
+Request → Server B → validates JWT ✅
+	👉 Server doesn’t remember anything
+	👉 Each request is independent 
+🔸 Stateful ❌
+Login → server stores session  
+Next request → server checks session
+	👉 Server has to remember user
+🔹 Why Statelessness is Required?
+🔸 1. Scalability 
+👉 In microservices:
+Request 1 → Server A  
+Request 2 → Server B  
+✔ Works fine in stateless
+❌ In stateful: Server B doesn’t know session → problem
+
+🔸 2. Works with Load Balancing
+Using: Spring Cloud Gateway 👉 Requests go to different instances
+✔ Stateless → no issue
+❌ Stateful → session mismatch
+
+🔸 3. Simpler & Faster 👉 No need to: Store session, Maintain memory, ✔ Better performance
+
+🔸 4. Better for JWT Authentication
+👉 JWT contains all info:
+userId, roles, expiry
+✔ Server just validates token
+✔ No DB/session lookup needed
+
+🔸 5. Fault Tolerance
+👉 If one server crashes:
+✔ Stateless → no data lost
+❌ Stateful → session lost
+
+🔹 Real-Life Analogy : Stateless = ATM
+
+Statelessness is required for scalability and load balancing, as each request is independent and can be handled by any server without relying on stored session data.Statelessness is required for scalability and load balancing, as each request is independent and can be handled by any server without relying on stored session data.
+========================================================================================================================================================
