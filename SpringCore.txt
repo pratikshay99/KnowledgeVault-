@@ -1,0 +1,176 @@
+1️⃣ IoC Container:(Inversion of Control):
+IoC means control of object creation is given to Spring container.
+Instead of creating objects manually, Spring creates and injects them using Dependency Injection.
+
+Without Spring:  UserService service = new UserService();
+👉 With Spring:
+	You don’t create objects
+	Spring creates and manages them
+What actually happens:
+Spring starts → creates ApplicationContext
+Scans your classes (@Component, @Service)
+Creates objects (beans)
+Stores them in container
+
+👉 Internally: It’s like a map of objects
+
+"userService" → UserService object
+"userRepo" → UserRepository object
+
+Why this matters:
+	No manual object creation
+	Loose coupling
+	Easy testing
+========================================================================================================================================================
+2️⃣ Dependency Injection (DI):
+DI means providing dependencies to class from outside instead of creating them inside class.
+In Spring, container creates required objects & injects them automatically.
+This helps reduce tight coupling & makes code easier to test and maintain
+
+	class UserService {
+    		UserRepository repo = new UserRepository(); // ❌ tight coupling
+	}
+
+👉 With DI:
+
+	class UserService {
+    		private UserRepository repo;
+	}
+Types:
+1️⃣.	Constructor (best ✅): Dependencies are injected through constructor: means required objects are provided through constructor instead of creating them inside class.
+🔴Example WITHOUT Dependency Injection
+	class Engine {}
+
+	class Car {  Engine engine = new Engine();}
+Inside Car: Car itself is creating Engine object.
+Meaning:
+Car depends on Engine
+Car creates Engine itself
+🔴 Example WITH Constructor Injection:
+	class Engine {}
+
+	class Car {
+	    Engine engine;
+	
+    	    Car(Engine engine) {
+        	this.engine = engine;} 
+	}
+🔥Car(Engine engine): means:👉 Engine object is GIVEN to Car from outside. Car is NOT creating Engine.
+
+2️⃣.	Setter: Dependencies injected using setter method.
+3️⃣.	Field Injection: Injected directly on field using @Autowired.(Less Recommended)
+========================================================================================================================================================
+3️⃣ @Autowired: used for dependency injection.
+
+Spring scans required beans from the container and injects it automatically.
+Matches dependency by type (default)
+If multiple beans exist → uses:
+@Qualifier
+@Primary
+Injects dependency at runtime
+
+	@Autowired
+	UserRepository repo;
+
+👉 What Spring does:
+Looks inside container
+Finds object of type UserRepository
+Injects it
+	
+========================================================================================================================================================
+🔹 Bean Lifecycle (Perfect Answer)
+
+Spring first creates the bean, injects dependencies, then calls init methods like @PostConstruct, Bean ready for use and before destroying it calls @PreDestroy.
+
+========================================================================================================================================================
+Q4. @Component vs @Service vs @Repository
+
+All are Spring beans, stereotypes of @Component
+
+@Component → generic
+@Service → business logic layer
+@Repository → DAO layer(db operations) + exception handling
+========================================================================================================================================================
+Q6. What are Spring Boot Starters?
+Predefined dependency bundles
+
+Example:
+spring-boot-starter-web
+spring-boot-starter-data-jpa
+
+👉 Benefit:
+Avoid manual dependency management
+========================================================================================================================================================
+Q7. How does embedded Tomcat work?
+Old way:
+Build WAR
+Deploy to server
+
+New way:
+Spring Boot uses embedded Tomcat, so we don’t need external server deployment.
+Application runs using main method and starts on a port like 8080.
+
+👉 Flow:
+main() runs
+Spring Boot starts
+Embedded Tomcat initialized
+DispatcherServlet mapped
+App ready on port (8080)
+
+👉 Key insight:
+No WAR deployment needed → runs as standalone app
+========================================================================================================================================================
+🔴 DispatcherServlet?
+-main controller of Spring MVC
+1️⃣It receives all incoming HTTP requests first.
+2️⃣ Finds correct controller
+3️⃣ Calls controller method 
+4️⃣ Gets response
+5️⃣ Sends response back to client, JSON / HTML etc.
+Flow:
+Client → DispatcherServlet → Controller → Service → Response
+
+Why? 
+Instead of every controller handling everything:
+-one servlet manages all requests
+-cleaner architecture
+-easy configuration
+🔴 In Spring Boot: Spring Boot auto-configures DispatcherServlet automatically.
+========================================================================================================================================================
+Q11. How does JWT authentication work?
+-User logs in
+-Server generates JWT token
+-Client sends token in header in each request
+-Server validates token
+
+👉 Stateless(no session) authentication
+========================================================================================================================================================
+How did you use Keycloak in your project?
+-Used Keycloak for authentication
+-Integrated with Spring Boot using OAuth2
+-Secured APIs using JWT tokens
+-Implemented role-based access control
+========================================================================================================================================================
+What is OAuth2?
+Authorization framework that allows third-party access without sharing credentials
+========================================================================================================================================================
+How does Redis help?
+Redis stores data in memory
+Benefits:
+Faster read operations
+Reduces DB load
+👉 Used for caching frequently accessed data
+========================================================================================================================================================
+How do you handle large data in APIs?
+1. Caching → Redis
+2. DB → indexing, queries
+3. Pagination → limit data
+4. Load testing → JMeter
+Streaming
+Async processing
+========================================================================================================================================================
+Exception handling
+@Repository converts DB exceptions into Spring exceptions
+JPA basics
+Monolythic vs microservice
+========================================================================================================================================================
