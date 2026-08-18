@@ -1,298 +1,92 @@
-# 🔥 Important Understanding
+👉 JPA = specification/interface
+👉 Hibernate = implementation/framework
+# 🔥Controller → Service → Repository → DB
+👉 Repository layer uses them for DB operations(JPA/Hibernate mainly work in Repository layer)
 
-## Hibernate = implementation/framework
+Example: You write:
 
-## JPA = specification/interface
-
----
-
-Example:
-
-You write:
-
-```java id="clmb9j"
-@Entity
-@Table
-@OneToMany
-```
+	@Entity
+	@Table
+	@OneToMany
 
 These are **JPA annotations**
-
 Hibernate internally implements them.
 
----
-
-# 🎯 So in interviews
-
-If interviewer asks:
-
 > “Do you know Hibernate?”
-
-You can safely answer:
-
 > Yes, I worked mainly with JPA annotations and Hibernate as the ORM implementation in Spring Boot.
 
-That is enough for most SWE interviews.
-
----
-
-# 🚀 Best 1-hour JPA topics for YOU
-
-Only read these:
-
----
-
-# 1️⃣ What is JPA?
-
-👉 Say:
-
-> JPA is a specification used for object-relational mapping in Java.
-> It helps map Java objects to database tables.
-
----
-
-# 2️⃣ What is Hibernate?
-
-👉 Say:
-
-> Hibernate is the most commonly used implementation of JPA.
-
----
-
-# 3️⃣ What is ORM?
-
-👉 Say:
-
-> ORM maps Java objects to database tables automatically.
-
-Example:
-
-```java id="z4d9hb"
-User class → users table
-```
-
----
-
-# 4️⃣ @Entity
-
-👉 Means:
-This class represents DB table.
-
-```java id="ls36fw"
-@Entity
-class User {
-}
-```
-
----
-
-# 5️⃣ @Id
-
-Primary key.
-
-```java id="4of1dm"
-@Id
-private Long id;
-```
-
----
-
-# 6️⃣ JpaRepository
-
-👉 Used for DB operations automatically.
-
-```java id="1s8krh"
-interface UserRepo extends JpaRepository<User, Long>
-```
-
-You get:
-
-* save()
-* findById()
-* delete()
-
-without writing SQL.
-
----
-
-# 7️⃣ fetch = LAZY vs EAGER (VERY IMPORTANT)
-
-## EAGER
-
-Loads related data immediately.
-
-## LAZY
-
-Loads only when needed.
-
-👉 Mostly prefer LAZY.
-
----
-
-# 8️⃣ OneToMany / ManyToOne
-
-Example:
-
-* One user → many orders
-
-```java id="ck3jlwm"
-@OneToMany
-```
-
----
-
-# 🔥 MOST IMPORTANT FOR YOU
-
-Just understand THIS flow:
-
-```id="j5l3db"
-Controller → Service → Repository → DB
-```
-
-JPA/Hibernate mainly work in:
-👉 Repository layer
-
----
-
-# 🎯 Final recommendation
-
-Don’t separately study:
-❌ full Hibernate deeply
-
-Just know:
-
+Don’t separately study: ❌ full Hibernate deeply, Just know:
 * JPA basics
 * Hibernate implements JPA
 * annotations
 * repository flow
 
-That is enough for your current interviews.
 # 🔴 1️⃣ What is JPA?
-
 > JPA (Java Persistence API) is a specification used for Object Relational Mapping in Java.
 > It helps map Java objects to database tables and reduces the need to write manual SQL queries.
 
----
-
 # 🔴 2️⃣ What is Hibernate?
-
 > Hibernate is the most commonly used implementation of JPA.
 > It provides the actual functionality behind JPA features like entity mapping and database operations.
 
----
-
 # 🔴 3️⃣ What is ORM?
-
-> ORM (Object Relational Mapping) is a technique that maps Java classes to database tables.
+> ORM (Object Relational Mapping) is a technique that maps Java classes to database tables automatically.
 > For example, a User class can be mapped to a users table automatically.
 
----
-
 # 🔴 4️⃣ What is @Entity?
-
-> @Entity is used to mark a class as a database entity.
+> @Entity is used to mark class as db entity(this class represents DB table.).
 > Spring/Hibernate maps this class to a database table.
-
-Example:
-
-```java id="4mjlwm"
-@Entity
-class User {
-}
-```
-
----
+e.g
+	@Entity
+	class User {
+	}
 
 # 🔴 5️⃣ What is @Id?
-
 > @Id is used to define the primary key of the entity.
-
-Example:
-
-```java id="yzwcf5"
-@Id
-private Long id;
-```
-
----
+e.g.
+	@Id
+	private Long id;
 
 # 🔴 6️⃣ What is JpaRepository?
+> JpaRepository provides built-in db operations like save(), findById(), delete() & findAll() without writing SQL queries manually.
+e.g.
+	interface UserRepo extends JpaRepository<User, Long>
 
-> JpaRepository provides built-in database operations like save, findById, delete, and findAll without writing SQL queries manually.
+# 🔴 7️⃣ fetch= Difference between LAZY and EAGER Fetching
 
-Example:
+## EAGER > Related data is loaded immediately along with the main entity.
 
-```java id="c1ob8r"
-interface UserRepo extends JpaRepository<User, Long>
-```
-
----
-
-# 🔴 7️⃣ Difference between LAZY and EAGER Fetching
-
-## EAGER
-
-> Related data is loaded immediately along with the main entity.
-
-## LAZY
-
-> Related data is loaded only when required.
+## LAZY > Related data is loaded only when required.
 
 👉 In real projects, LAZY loading is preferred for better performance.
 
----
-
 # 🔴 8️⃣ What is @OneToMany?
-
 > @OneToMany defines one-to-many relationship between entities.
-
-Example:
-
-* One user can have many orders.
-
----
+e.g.
+	* One user can have many orders.
 
 # 🔴 9️⃣ What is @ManyToOne?
-
 > @ManyToOne defines many-to-one relationship.
-
-Example:
-
-* Many orders belong to one user.
-
----
+e.g.
+	* Many orders belong to one user.
 
 # 🔴 🔟 How does DB flow work in Spring Boot?
 
-```id="uwrjlwm"
-Controller → Service → Repository → Database
-```
-
+	Controller → Service → Repository → Database
 ### Flow:
 
 * Controller handles request
 * Service contains business logic
 * Repository interacts with DB using JPA/Hibernate
 
----
-
 # 🔴 1️⃣1️⃣ Why use JPA/Hibernate?
-
 > JPA and Hibernate reduce boilerplate code, simplify database operations, and provide ORM support for easier development.
-
----
 
 # 🔴 1️⃣2️⃣ Native Query vs JPQL
 
-## JPQL
+## JPQL > Query written using entity names and fields.
 
-> Query written using entity names and fields.
-
-## Native Query
-
-> Actual SQL query written directly.
-
----
+## Native Query > Actual SQL query written directly.
 
 # 🔴 1️⃣3️⃣ What is ddl-auto?
 
@@ -304,32 +98,12 @@ Common values:
 * create
 * validate
 
----
-
 # 🔴 1️⃣4️⃣ What is Hibernate Cache?
 
 > Hibernate cache stores frequently used data in memory to reduce database calls and improve performance.
 
----
-
 # 🔴 1️⃣5️⃣ Difference between save() and saveAndFlush()
 
-## save()
+## save() > Saves entity but may delay DB synchronization.
 
-> Saves entity but may delay DB synchronization.
-
-## saveAndFlush()
-
-> Immediately synchronizes changes with database.
-
----
-
-# 🎯 MOST IMPORTANT THING
-
-For your interviews, just remember:
-
-👉 JPA = specification
-👉 Hibernate = implementation
-👉 Repository layer uses them for DB operations
-
-That’s enough for most Spring Boot backend interviews at your experience level.
+## saveAndFlush() > Immediately synchronizes changes with database.
