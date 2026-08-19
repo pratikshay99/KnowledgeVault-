@@ -1,0 +1,164 @@
+Record → immutable → getter-like methods, no setters
+Class → can be mutable → getters + setters if you need them
+
+Q1. "What are the new features you've used in Java 17 or beyond Java 8?"
+
+1. Records (Java 16 — available in 17)
+
+Instead of writing a class with constructor, getters, equals, hashCode, toString — Records do it all automatically.
+
+// Old way — too much boilerplate
+
+// New way — Record
+public record User(String name, int age) {}
+// that's it — constructor, getters, equals, hashCode, toString — all auto generated
+e.g
+User user = new User("Mahesh", 25);
+user.name(); // getter — note: no get prefix
+user.age();
+
+When to use: DTOs, response objects, data carriers — anywhere you just hold data and pass it around.
+
+2. Sealed Classes (Java 17)
+
+Controls which classes can extend your class. Instead of anyone extending your class, you explicitly list who's allowed.
+
+java
+// Only these 3 classes can extend Shape — no one else
+public sealed class Shape
+    permits Circle, Rectangle, Triangle {}
+
+public final class Circle extends Shape {}
+public final class Rectangle extends Shape {}
+public final class Triangle extends Shape {}
+
+// This will NOT compile — not in permits list
+public class Pentagon extends Shape {} // ❌ error
+
+When to use: When you want strict control over class hierarchy — like in domain models where you know exactly what types exist.
+
+3. Pattern Matching for instanceof (Java 16/17)
+
+Old way was verbose — check type, then cast separately. Now you do both in one line.
+
+java
+// Old way
+if (obj instanceof String) {
+    String s = (String) obj; // cast again — redundant
+    System.out.println(s.length());
+}
+
+// New way — pattern matching
+if (obj instanceof String s) { // check + cast in one line
+    System.out.println(s.length());
+}
+
+4. Text Blocks (Java 15 — available in 17)
+
+Multi-line strings without escape characters — great for JSON, SQL, HTML inside Java.
+
+java
+// Old way — ugly
+String json = "{\n" +
+              "  \"name\": \"Mahesh\",\n" +
+              "  \"age\": 25\n" +
+              "}";
+
+// New way — Text Block
+String json = """
+              {
+                "name": "Mahesh",
+                "age": 25
+              }
+              """;
+
+5. Switch Expressions (Java 14 — available in 17)
+
+Switch now returns a value directly — no more break statements, no fall-through bugs.
+
+java
+// Old switch — verbose, error prone
+String result;
+switch (day) {
+    case MONDAY:
+    case TUESDAY:
+        result = "Weekday";
+        break;
+    case SATURDAY:
+    case SUNDAY:
+        result = "Weekend";
+        break;
+    default:
+        result = "Unknown";
+}
+
+// New switch expression — clean
+String result = switch (day) {
+    case MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY -> "Weekday";
+    case SATURDAY, SUNDAY -> "Weekend";
+    default -> "Unknown";
+};
+Q2. "What is the difference between Java 8 and Java 17?"
+
+Quick answer to say out loud:
+"Java 8 gave us lambdas, streams, Optional, and functional interfaces — the foundation. Java 9-17 built on top with modules, local variable type inference with var, records for immutable data classes, sealed classes for controlled hierarchies, pattern matching for cleaner instanceof checks, and text blocks for readable multiline strings. Overall Java 17 is much cleaner and less boilerplate than Java 8."
+
+Q3. "What is var in Java? — Java 10"
+
+var lets the compiler infer the type — you don't have to write it explicitly.
+
+java
+// Old way
+Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
+
+// With var — compiler figures out the type
+var map = new HashMap<String, List<Integer>>();
+var list = new ArrayList<String>();
+var name = "Mahesh"; // inferred as String
+
+Important: var is still statically typed — type is fixed at compile time, not runtime. It's not like JavaScript's dynamic typing.
+
+Limitations:
+
+Only for local variables — not for method parameters or fields
+Can't use with null — compiler can't infer type from null
+Q4. "What are Sealed Classes and why use them?"
+
+Already covered above — but here's the interview phrasing:
+
+"Sealed classes restrict which classes can extend or implement them using the permits keyword. This gives you exhaustive control over your class hierarchy — useful in domain modeling where you know all possible subtypes upfront. It also works well with pattern matching in switch expressions since the compiler knows all possible types."
+
+Q5. "What is Record in Java? How is it different from a regular class?"
+	Regular Class	Record
+Boilerplate	Constructor, getters, equals, hashCode, toString manually	All auto-generated
+Mutable?	Yes	No — fields are final by default
+Extends?	Yes	Cannot extend another class
+Use for	Any object	Immutable data carriers only
+Q6. "What is Pattern Matching with Switch? — Java 17 preview"
+
+Combines switch with instanceof check in one go:
+
+java
+static String format(Object obj) {
+    return switch (obj) {
+        case Integer i -> "Integer: " + i;
+        case String s  -> "String: " + s;
+        case null      -> "null value";
+        default        -> "Unknown: " + obj;
+    };
+}
+
+No need for separate instanceof checks — switch handles type matching directly.
+
+Quick Summary — What to Remember
+Feature	Java Version	One Line
+Lambdas, Streams	Java 8	Functional programming in Java
+var	Java 10	Local variable type inference
+Text Blocks	Java 15	Clean multiline strings
+Records	Java 16	Immutable data class with zero boilerplate
+Pattern Matching instanceof	Java 16	Check and cast in one line
+Sealed Classes	Java 17	Control who can extend your class
+Switch Expressions	Java 14	Switch that returns a value
+One Final Answer to Say Out Loud
+
+"In Java 17 the features I use most are Records for DTOs — they eliminate all the boilerplate of getters, constructors, equals and hashCode. Text blocks for clean JSON or SQL strings inside code. Pattern matching for instanceof which removes redundant casting. And switch expressions which are cleaner and safer than the old switch statement. Sealed classes I've used in domain modeling to restrict class hierarchies.
