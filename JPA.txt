@@ -92,11 +92,25 @@ e.g.
 
 > `spring.jpa.hibernate.ddl-auto` controls database schema behavior.
 
-Common values:
+ddl-auto tells Hibernate what to do with database tables on startup — whether to create, update, validate, or leave them alone. In production I always use none or validate and handle schema changes through Liquibase instead
 
-* update
-* create
-* validate
+Value		What happens on startup
+---------------------------------------------
+create		Drops existing tables, creates fresh ones every time
+create-drop	Creates tables on start, drops them when app shuts down
+update		Keeps existing tables, only adds missing columns/tables
+validate	Just checks if tables match entities — throws error if not
+none		Does absolutely nothing to the schema
+
+Which one to use when:
+Development → update or create (convenient, don't care about data)
+Testing → create-drop (fresh DB every test run)
+Production → none or validate (never let Hibernate touch your real data — use proper DB migration tools like Flyway or Liquibase)
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 # 🔴 1️⃣4️⃣ What is Hibernate Cache?
 
@@ -107,3 +121,857 @@ Common values:
 ## save() > Saves entity but may delay DB synchronization.
 
 ## saveAndFlush() > Immediately synchronizes changes with database.
+
+# 🔴 What is the role of EntityManager in JPA?
+
+"EntityManager is the core JPA interface that manages entity lifecycle — meaning it handles saving(persist), find, merge, remove. It works within a Persistence Context which acts as a first-level cache, and under the hood, JpaRepository uses EntityManager to do all its operations."
+ — "JpaRepository uses EntityManager under the hood" — is what makes it a senior-level answer, because you're showing you understand the abstraction layers.
+
+# 🔴EntityManager vs JpaRepository
+
+		EntityManager			JpaRepository
+Level		Low level			High level
+Control		Full control over queries	Ready-made methods
+Boilerplate	More code			Almost no code
+Custom queries	Very flexible			Possible but limited
+Use when	Complex queries needed		Standard CRUD is enough
+
+# 🔴Key concept — Persistence Context
+
+EntityManager maintains a Persistence Context — think of it as a temporary cache or a "work area" for the current session/transaction.
+
+o Any entity you load or save goes into this context.
+o If you load the same entity twice, it doesn't hit the database twice — it returns the same                	object from the context.
+o At the end of the transaction, changes are automatically flushed to the database.
+e.g
+User u1 = em.find(User.class, 1L);
+User u2 = em.find(User.class, 1L);
+// u1 == u2 — same object, only one DB hit
+
+1. Entity States in Hibernate
+
+What it is:
+Every entity (Java object) in Hibernate goes through different states depending on whether Hibernate is tracking it or not.
+
+4 states:
+
+Transient — object is just created in Java, Hibernate has no idea it exists, nothing in DB yet.
+
+java
+User user = new User(); // transient — just a plain Java object
+user.setName("Mahesh");
+
+Persistent — object is now under Hibernate's watch, inside an active session. Any change you make is automatically saved to DB.
+
+java
+session.save(user); // now persistent — Hibernate tracks every change
+user.setName("Mahesh Updated"); // automatically saved — no explicit update needed
+
+Detached — session is closed, but object still exists in Java memory. Hibernate no longer tracks it.
+
+java
+session.close(); // user is now detached
+user.setName("Changed"); // Hibernate won't save this — not tracking anymore
+
+Removed — you told Hibernate to delete it. Will be deleted from DB on commit.
+
+java
+session.delete(user); // removed state
+
+One-line interview answer:
+"An entity starts as Transient when just created, becomes Persistent when attached to a session where Hibernate auto-tracks changes, becomes Detached when the session closes, and Removed when marked for deletion."
+
+2. N+1 Problem
+
+What it is:
+You fire 1 query to get a list, then Hibernate fires N more queries — one for each item in that list — to load related data. So if you have 100 users, you get 101 queries total instead of 1 or 2.
+
+Example:
+
+java
+List<User> users = userRepository.findAll(); // 1 query — fetches all users
+
+for (User user : users) {
+    System.out.println(user.getOrders()); // 1 query per user — N queries!
+}
+// Total = 1 + N queries — N+1 problem
+
+How to fix it — use @EntityGraph or JOIN FETCH:
+
+java
+// Fix 1 — JOIN FETCH in JPQL
+@Query("SELECT u FROM User u JOIN FETCH u.orders")
+List<User> findAllWithOrders();
+
+// Fix 2 — @EntityGraph
+@EntityGraph(attributePaths = {"orders"})
+List<User> findAll();
+
+Now it loads everything in 1 query instead of N+1.
+
+One-line interview answer:
+"N+1 happens when Hibernate fires one query to load a list and then one additional query per item to load related data. I fix it using JOIN FETCH or @EntityGraph to load everything in a single query."
+
+3. @Transactional
+
+What it is:
+@Transactional tells Spring: "wrap this method in a database transaction — if everything succeeds, commit. If anything fails, rollback everything."
+
+Simple analogy:
+Think of a transaction like a bank transfer. You debit Account A and credit Account B. If crediting B fails, you want to undo the debit from A too. Either both happen or neither happens. That's exactly what @Transactional does.
+
+java
+@Transactional
+public void transferMoney(Long fromId, Long toId, Double amount) {
+    Account from = accountRepo.findById(fromId).get();
+    Account to = accountRepo.findById(toId).get();
+
+    from.setBalance(from.getBalance() - amount); // debit
+    to.setBalance(to.getBalance() + amount);     // credit
+
+    // if anything throws exception here — both changes are rolled back automatically
+}
+
+How it works internally:
+
+Spring creates a proxy around your method
+Before method starts → opens transaction
+Method runs normally → commits transaction
+Exception thrown → rolls back everything automatically
+
+Important points interviewers ask:
+
+By default only rolls back on unchecked exceptions (RuntimeException)
+For checked exceptions you need: @Transactional(rollbackFor = Exception.class)
+@Transactional on a private method won't work — Spring proxy can't intercept it
+
+One-line interview answer:
+"@Transactional wraps a method in a DB transaction — commits if everything succeeds, rolls back automatically if an exception occurs. Internally Spring creates a proxy around the method to manage this."
+
+4. LAZY vs EAGER
+
+What it is:
+Controls when related data is loaded from the database.
+
+Simple analogy:
+You open an email app:
+
+EAGER — loads all emails AND all attachments immediately when you open the app, whether you read them or not.
+LAZY — loads just the email list first. Attachments only load when you actually open a specific email.
+java
+// EAGER — loads User + Orders immediately together
+@OneToMany(fetch = FetchType.EAGER)
+private List<Order> orders;
+
+// LAZY — loads Orders only when you call user.getOrders()
+@OneToMany(fetch = FetchType.LAZY)
+private List<Order> orders;
+
+When to use which:
+
+	LAZY	EAGER
+Use when	You don't always need related data	You always need related data
+Performance	Better — loads only what's needed	Risky — loads everything always
+Default for	@OneToMany, @ManyToMany	@ManyToOne, @OneToOne
+
+Common problem with LAZY:
+
+java
+// Session closes after this line
+User user = userRepository.findById(1L).get();
+
+// Now outside transaction — session is closed
+user.getOrders(); // LazyInitializationException — session already closed!
+
+Fix: use @Transactional on the method, or use JOIN FETCH.
+
+One-line interview answer:
+"EAGER loads related data immediately with the parent, LAZY loads it only when accessed. I prefer LAZY by default for performance, and fix LazyInitializationException by keeping the operation inside a transaction or using JOIN FETCH."
+
+5. First Level vs Second Level Cache
+
+What it is:
+Hibernate has two levels of caching to avoid hitting the database repeatedly.
+
+Simple analogy:
+
+First Level Cache — your desk. Whatever you picked up today is right there. Fast to access. But when you leave (session closes), the desk is cleared.
+Second Level Cache — the office shelf. Shared by everyone. Even after you leave and come back, the data is still there.
+
+First Level Cache:
+
+Always on by default — you can't disable it
+Scoped to a single session — not shared between sessions
+Same entity loaded twice in same session → second load comes from cache, not DB
+java
+User u1 = session.get(User.class, 1L); // hits DB
+User u2 = session.get(User.class, 1L); // from cache — no DB hit
+// u1 == u2
+
+Second Level Cache:
+
+Not enabled by default — you have to configure it
+Scoped to SessionFactory — shared across all sessions
+Even after session closes, data stays cached
+Common providers: EhCache, Redis, Hazelcast
+java
+@Entity
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE) // enable 2nd level cache
+public class User { }
+properties
+# application.properties
+spring.jpa.properties.hibernate.cache.use_second_level_cache=true
+spring.jpa.properties.hibernate.cache.region.factory_class=org.hibernate.cache.ehcache.EhCacheRegionFactory
+
+Side by side:
+
+	First Level Cache	Second Level Cache
+Scope	Single session	All sessions (shared)
+Default	Always on	Must configure manually
+Lives until	Session closes	App restarts (or TTL expires)
+Provider	Hibernate itself	EhCache, Redis etc.
+
+One-line interview answer:
+"First level cache is per-session, always on by default — same entity loaded twice in a session hits DB only once. Second level cache is shared across all sessions, needs explicit configuration with a provider like EhCache, and survives session close."1. Entity States in Hibernate
+
+What it is:
+Every entity (Java object) in Hibernate goes through different states depending on whether Hibernate is tracking it or not.
+
+4 states:
+
+Transient — object is just created in Java, Hibernate has no idea it exists, nothing in DB yet.
+
+java
+User user = new User(); // transient — just a plain Java object
+user.setName("Mahesh");
+
+Persistent — object is now under Hibernate's watch, inside an active session. Any change you make is automatically saved to DB.
+
+java
+session.save(user); // now persistent — Hibernate tracks every change
+user.setName("Mahesh Updated"); // automatically saved — no explicit update needed
+
+Detached — session is closed, but object still exists in Java memory. Hibernate no longer tracks it.
+
+java
+session.close(); // user is now detached
+user.setName("Changed"); // Hibernate won't save this — not tracking anymore
+
+Removed — you told Hibernate to delete it. Will be deleted from DB on commit.
+
+java
+session.delete(user); // removed state
+
+One-line interview answer:
+"An entity starts as Transient when just created, becomes Persistent when attached to a session where Hibernate auto-tracks changes, becomes Detached when the session closes, and Removed when marked for deletion."
+
+2. N+1 Problem
+
+What it is:
+You fire 1 query to get a list, then Hibernate fires N more queries — one for each item in that list — to load related data. So if you have 100 users, you get 101 queries total instead of 1 or 2.
+
+Example:
+
+java
+List<User> users = userRepository.findAll(); // 1 query — fetches all users
+
+for (User user : users) {
+    System.out.println(user.getOrders()); // 1 query per user — N queries!
+}
+// Total = 1 + N queries — N+1 problem
+
+How to fix it — use @EntityGraph or JOIN FETCH:
+
+java
+// Fix 1 — JOIN FETCH in JPQL
+@Query("SELECT u FROM User u JOIN FETCH u.orders")
+List<User> findAllWithOrders();
+
+// Fix 2 — @EntityGraph
+@EntityGraph(attributePaths = {"orders"})
+List<User> findAll();
+
+Now it loads everything in 1 query instead of N+1.
+
+One-line interview answer:
+"N+1 happens when Hibernate fires one query to load a list and then one additional query per item to load related data. I fix it using JOIN FETCH or @EntityGraph to load everything in a single query."
+
+3. @Transactional
+
+What it is:
+@Transactional tells Spring: "wrap this method in a database transaction — if everything succeeds, commit. If anything fails, rollback everything."
+
+Simple analogy:
+Think of a transaction like a bank transfer. You debit Account A and credit Account B. If crediting B fails, you want to undo the debit from A too. Either both happen or neither happens. That's exactly what @Transactional does.
+
+java
+@Transactional
+public void transferMoney(Long fromId, Long toId, Double amount) {
+    Account from = accountRepo.findById(fromId).get();
+    Account to = accountRepo.findById(toId).get();
+
+    from.setBalance(from.getBalance() - amount); // debit
+    to.setBalance(to.getBalance() + amount);     // credit
+
+    // if anything throws exception here — both changes are rolled back automatically
+}
+
+How it works internally:
+
+Spring creates a proxy around your method
+Before method starts → opens transaction
+Method runs normally → commits transaction
+Exception thrown → rolls back everything automatically
+
+Important points interviewers ask:
+
+By default only rolls back on unchecked exceptions (RuntimeException)
+For checked exceptions you need: @Transactional(rollbackFor = Exception.class)
+@Transactional on a private method won't work — Spring proxy can't intercept it
+
+One-line interview answer:
+"@Transactional wraps a method in a DB transaction — commits if everything succeeds, rolls back automatically if an exception occurs. Internally Spring creates a proxy around the method to manage this."
+
+4. LAZY vs EAGER
+
+What it is:
+Controls when related data is loaded from the database.
+
+Simple analogy:
+You open an email app:
+
+EAGER — loads all emails AND all attachments immediately when you open the app, whether you read them or not.
+LAZY — loads just the email list first. Attachments only load when you actually open a specific email.
+java
+// EAGER — loads User + Orders immediately together
+@OneToMany(fetch = FetchType.EAGER)
+private List<Order> orders;
+
+// LAZY — loads Orders only when you call user.getOrders()
+@OneToMany(fetch = FetchType.LAZY)
+private List<Order> orders;
+
+When to use which:
+
+	LAZY	EAGER
+Use when	You don't always need related data	You always need related data
+Performance	Better — loads only what's needed	Risky — loads everything always
+Default for	@OneToMany, @ManyToMany	@ManyToOne, @OneToOne
+
+Common problem with LAZY:
+
+java
+// Session closes after this line
+User user = userRepository.findById(1L).get();
+
+// Now outside transaction — session is closed
+user.getOrders(); // LazyInitializationException — session already closed!
+
+Fix: use @Transactional on the method, or use JOIN FETCH.
+
+One-line interview answer:
+"EAGER loads related data immediately with the parent, LAZY loads it only when accessed. I prefer LAZY by default for performance, and fix LazyInitializationException by keeping the operation inside a transaction or using JOIN FETCH."
+
+5. First Level vs Second Level Cache
+
+What it is:
+Hibernate has two levels of caching to avoid hitting the database repeatedly.
+
+Simple analogy:
+
+First Level Cache — your desk. Whatever you picked up today is right there. Fast to access. But when you leave (session closes), the desk is cleared.
+Second Level Cache — the office shelf. Shared by everyone. Even after you leave and come back, the data is still there.
+
+First Level Cache:
+
+Always on by default — you can't disable it
+Scoped to a single session — not shared between sessions
+Same entity loaded twice in same session → second load comes from cache, not DB
+java
+User u1 = session.get(User.class, 1L); // hits DB
+User u2 = session.get(User.class, 1L); // from cache — no DB hit
+// u1 == u2
+
+Second Level Cache:
+
+Not enabled by default — you have to configure it
+Scoped to SessionFactory — shared across all sessions
+Even after session closes, data stays cached
+Common providers: EhCache, Redis, Hazelcast
+java
+@Entity
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE) // enable 2nd level cache
+public class User { }
+properties
+# application.properties
+spring.jpa.properties.hibernate.cache.use_second_level_cache=true
+spring.jpa.properties.hibernate.cache.region.factory_class=org.hibernate.cache.ehcache.EhCacheRegionFactory
+
+Side by side:
+
+	First Level Cache	Second Level Cache
+Scope	Single session	All sessions (shared)
+Default	Always on	Must configure manually
+Lives until	Session closes	App restarts (or TTL expires)
+Provider	Hibernate itself	EhCache, Redis etc.
+
+One-line interview answer:
+"First level cache is per-session, always on by default — same entity loaded twice in a session hits DB only once. Second level cache is shared across all sessions, needs explicit configuration with a provider like EhCache, and survives session close."
+
+1. save() vs persist() vs merge() vs update()
+
+Simple answer:
+All four deal with saving/updating data but behave differently based on entity state and what they return.
+
+persist() — JPA standard
+
+Only works on Transient entity (new object, never saved)
+Doesn't return anything (void)
+Entity becomes Persistent immediately
+Throws exception if entity already has an ID
+java
+User user = new User(); // transient
+user.setName("Mahesh");
+em.persist(user); // now persistent — tracked by Hibernate
+
+save() — Hibernate specific
+
+Works on both Transient and Detached entities
+Returns the generated ID immediately
+If entity already exists — it re-saves it (inserts duplicate risk)
+java
+User user = new User(); // transient
+user.setName("Mahesh");
+Long id = session.save(user); // returns generated id
+
+merge() — JPA standard
+
+Works on Detached entity (session was closed, object modified outside)
+Returns a new Persistent copy — the original object stays detached
+Use when you modified an object after session closed and want to save changes
+java
+// session closed — user is detached
+user.setName("Updated Name");
+
+User persistentUser = em.merge(user); // returns new persistent copy
+// use persistentUser going forward, not user
+
+update() — Hibernate specific
+
+Works on Detached entity
+Doesn't return anything (void)
+Throws exception if another object with same ID already exists in session
+java
+// user is detached
+user.setName("Updated");
+session.update(user); // reattaches to session
+
+Side by side:
+
+Method	Belongs to	Works on	Returns	Safe for detached?
+persist()	JPA	Transient only	void	No — throws exception
+save()	Hibernate	Transient + Detached	Generated ID	Yes
+merge()	JPA	Detached	New persistent copy	Yes — safest option
+update()	Hibernate	Detached	void	Yes but risky
+
+One-line interview answer:
+"persist() and save() are for new objects, merge() and update() are for detached objects. I prefer persist() for new entities and merge() for detached ones since they're JPA standard and safer."
+
+2. get() vs load()
+
+Simple answer:
+Both fetch an entity by ID but differ in when they hit the database.
+
+get()
+
+Hits database immediately
+Returns null if record not found
+Returns a real object
+java
+User user = session.get(User.class, 1L);
+// hits DB right now
+// if not found — returns null
+
+if (user != null) {
+    System.out.println(user.getName());
+}
+
+load()
+
+Returns a proxy object immediately — doesn't hit DB yet
+Hits database only when you actually access a property
+Throws ObjectNotFoundException if record not found (not null)
+java
+User user = session.load(User.class, 1L);
+// no DB hit yet — just a proxy
+
+System.out.println(user.getName());
+// NOW it hits DB — when you access getName()
+// if not found — throws ObjectNotFoundException
+
+Simple analogy:
+
+get() — you call a friend, they pick up immediately and tell you if they're available or not (null).
+load() — you get their voicemail immediately (proxy), they only actually respond when you ask them something specific. But if the number doesn't exist — it throws an error, not voicemail.
+
+Side by side:
+
+	get()	load()
+DB hit	Immediately	Only when property accessed
+Not found	Returns null	Throws ObjectNotFoundException
+Returns	Real object	Proxy object
+Use when	You need the object now	You just need reference/association
+
+One-line interview answer:
+"get() hits the database immediately and returns null if not found. load() returns a proxy and hits DB only when you access a property, throwing ObjectNotFoundException if not found. I use get() when I need the data right away and load() when I just need a reference."
+
+3. CascadeType
+
+What it is:
+When you do an operation on a Parent entity, CascadeType decides whether that operation should automatically apply to child entities too.
+
+Simple analogy:
+Think of a Parent and Child relationship. If parent moves to a new city:
+
+With Cascade — child automatically moves too
+Without Cascade — child stays, you have to move them separately
+
+All CascadeTypes explained:
+
+PERSIST — save parent → child also saved automatically
+
+java
+@OneToMany(cascade = CascadeType.PERSIST)
+List<Order> orders;
+
+// saving user automatically saves all orders too
+em.persist(user);
+
+MERGE — merge parent → child also merged automatically
+
+java
+@OneToMany(cascade = CascadeType.MERGE)
+List<Order> orders;
+
+em.merge(user); // merges user + all orders
+
+REMOVE — delete parent → child also deleted automatically
+
+java
+@OneToMany(cascade = CascadeType.REMOVE)
+List<Order> orders;
+
+em.remove(user); // deletes user + all orders
+
+REFRESH — refresh parent → child also refreshed from DB
+
+java
+@OneToMany(cascade = CascadeType.REFRESH)
+List<Order> orders;
+
+em.refresh(user); // reloads user + orders from DB
+
+DETACH — detach parent → child also detached
+
+java
+@OneToMany(cascade = CascadeType.DETACH)
+List<Order> orders;
+
+ALL — applies all above cascades together
+
+java
+@OneToMany(cascade = CascadeType.ALL)
+List<Order> orders;
+// persist, merge, remove, refresh, detach — all cascade to orders
+
+One-line interview answer:
+"CascadeType controls whether operations on a parent entity automatically propagate to child entities. I use CascadeType.ALL for tight parent-child relationships like Order and OrderItems, but avoid REMOVE cascade carefully in production to prevent accidental data deletion."
+
+4. mappedBy
+
+What it is:
+mappedBy tells Hibernate: "I am not the owner of this relationship — the other side is. Don't create an extra join table or foreign key column for me."
+
+Simple analogy:
+Think of a marriage certificate. Only one official document exists — you don't create two separate certificates. mappedBy says: "the other side holds the official document (foreign key), I'm just referencing it."
+
+Without mappedBy — wrong way:
+
+java
+@Entity
+public class User {
+    @OneToMany
+    List<Order> orders; // Hibernate creates a join table — user_orders
+}
+
+@Entity
+public class Order {
+    @ManyToOne
+    User user; // Hibernate creates foreign key — user_id in order table
+}
+// Result — two places storing the relationship — wrong!
+
+With mappedBy — correct way:
+
+java
+@Entity
+public class User {
+    @OneToMany(mappedBy = "user") // I am NOT the owner — Order side owns it
+    List<Order> orders;
+}
+
+@Entity
+public class Order {
+    @ManyToOne
+    @JoinColumn(name = "user_id") // I AM the owner — I hold the foreign key
+    User user;
+}
+// Result — only one foreign key column user_id in Order table — correct!
+
+Key rule:
+
+The side without mappedBy → owns the relationship → holds the foreign key
+The side with mappedBy → inverse side → just a reference, no extra column
+
+One-line interview answer:
+"mappedBy tells Hibernate which side owns the relationship and holds the foreign key. The side with mappedBy is the inverse side and doesn't create any extra column — without it Hibernate creates duplicate join columns or an unnecessary join table."
+
+5. @Transactional Deep Dive — Propagation
+
+What is Propagation:
+When one @Transactional method calls another @Transactional method — propagation decides what happens to the transaction.
+
+Most important propagation types:
+
+REQUIRED — default
+
+If transaction exists → join it
+If no transaction → create new one
+java
+@Transactional(propagation = Propagation.REQUIRED)
+// most common — just use existing or create new
+
+REQUIRES_NEW
+
+Always creates a brand new transaction
+Suspends existing transaction if one exists
+Use for audit logging — even if main transaction fails, log should still save
+java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void saveAuditLog() {
+    // always its own transaction — commits independently
+}
+
+NESTED
+
+Creates a savepoint inside existing transaction
+If nested fails → rolls back to savepoint only, not entire transaction
+
+NEVER
+
+Must NOT run inside a transaction
+Throws exception if transaction exists
+
+NOT_SUPPORTED
+
+Suspends existing transaction, runs without any transaction
+
+Simple analogy for REQUIRED vs REQUIRES_NEW:
+
+REQUIRED — you join an existing meeting already in progress
+REQUIRES_NEW — you start a completely separate meeting regardless of what's happening
+
+One-line interview answer:
+"@Transactional propagation controls what happens when a transactional method calls another. REQUIRED is the default — joins existing or creates new. REQUIRES_NEW always creates a fresh transaction, which I use for things like audit logging that must commit independently of the main transaction."
+
+6. Optimistic vs Pessimistic Locking
+
+What it is:
+Both handle concurrent access — when two users try to update the same record at the same time.
+
+Optimistic Locking:
+
+Assumes conflicts are rare
+Doesn't lock the DB row
+Uses a @Version column to detect conflicts at commit time
+If two users updated same record — second one gets OptimisticLockException
+java
+@Entity
+public class Account {
+    @Id
+    Long id;
+
+    Double balance;
+
+    @Version
+    int version; // Hibernate manages this automatically
+}
+
+How it works:
+
+User 1 reads account — version = 1
+User 2 reads account — version = 1
+User 1 updates — version becomes 2 ✅
+User 2 tries to update — version still 1 in their copy ❌ — throws OptimisticLockException
+
+Pessimistic Locking:
+
+Assumes conflicts are frequent
+Locks the DB row immediately when you read it
+No one else can read or update until lock is released
+Use in high-conflict scenarios like banking transactions
+java
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("SELECT a FROM Account a WHERE a.id = :id")
+Account findByIdWithLock(@Param("id") Long id);
+// row is locked in DB until transaction commits
+
+Side by side:
+
+	Optimistic	Pessimistic
+Locks DB row?	No	Yes
+Conflict assumption	Rare	Frequent
+How detected	@Version column	DB row lock
+Performance	Better	Slower
+Use when	Low conflict — read heavy	High conflict — write heavy
+Risk	OptimisticLockException on conflict	Deadlock risk
+
+One-line interview answer:
+"Optimistic locking uses a @Version column to detect conflicts at commit time without locking the row — good for low-conflict scenarios. Pessimistic locking locks the DB row immediately on read — good for high-conflict scenarios like financial transactions where two users updating the same record simultaneously is common."
+
+1. @Embeddable vs @Embedded
+
+What it is:
+Instead of creating a separate table for a group of related fields, you embed them directly into the parent entity's table.
+
+Simple analogy:
+Think of a User who has an Address (street, city, pincode). You have two choices:
+
+Create a separate Address table and join it — extra complexity
+Just embed address fields directly into the User table — simpler, one table
+
+@Embeddable + @Embedded is the second option.
+
+Without @Embeddable — messy way:
+
+java
+@Entity
+public class User {
+    @Id
+    Long id;
+    String name;
+
+    // address fields directly dumped in — not clean
+    String street;
+    String city;
+    String pincode;
+}
+
+Works but not clean — address fields are just floating inside User.
+
+With @Embeddable — clean way:
+
+Step 1 — Mark Address as Embeddable:
+
+java
+@Embeddable // this class has no table of its own
+public class Address {
+    String street;
+    String city;
+    String pincode;
+}
+
+Step 2 — Embed it inside User:
+
+java
+@Entity
+public class User {
+    @Id
+    Long id;
+    String name;
+
+    @Embedded // embed Address fields into User table
+    Address address;
+}
+
+Result in DB — only ONE table:
+
+USER table:
+| id | name   | street      | city  | pincode |
+|----|--------|-------------|-------|---------|
+| 1  | Mahesh | MG Road     | Pune  | 411045  |
+
+No separate Address table — all fields live in User table directly.
+
+Key points:
+
+@Embeddable — put on the class you want to embed (Address)
+@Embedded — put on the field inside the parent entity (User)
+No separate table created for @Embeddable class
+Can be reused — same Address class can be embedded in User, Employee, Company etc.
+
+One-line interview answer:
+"@Embeddable marks a class whose fields get embedded directly into the parent entity's table instead of creating a separate table. @Embedded is used on the field inside the parent entity. I use it for value objects like Address, Name, or ContactInfo that don't need their own identity or table."
+
+2. @NamedQuery
+
+What it is:
+A @NamedQuery is a predefined, named JPQL query written at the entity level. Instead of writing the query inline every time you need it, you define it once on the entity and call it by name anywhere.
+
+Simple analogy:
+Think of it like saving a contact in your phone. Instead of typing the full number every time, you save it once as "Mom" and just call "Mom" whenever needed.
+
+@NamedQuery = saving the query once, calling it by name anywhere.
+
+How to define it:
+
+java
+@Entity
+@NamedQuery(
+    name = "User.findByCity",         // name to call it by
+    query = "SELECT u FROM User u WHERE u.city = :city" // JPQL query
+)
+public class User {
+    @Id
+    Long id;
+    String name;
+    String city;
+}
+
+How to use it:
+
+java
+List<User> users = em.createNamedQuery("User.findByCity", User.class)
+                     .setParameter("city", "Pune")
+                     .getResultList();
+
+Multiple named queries on same entity:
+
+java
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "User.findByCity", query = "SELECT u FROM User u WHERE u.city = :city"),
+    @NamedQuery(name = "User.findByName", query = "SELECT u FROM User u WHERE u.name = :name")
+})
+public class User { }
+
+Why use it:
+
+Benefit	Explanation
+Validated at startup	Hibernate checks query syntax when app starts — fails fast if query is wrong
+Reusable	Define once, use anywhere
+Cleaner code	No inline query strings scattered everywhere
+Slightly faster	Query is parsed once at startup, not every time it's called
+
+@NamedQuery vs @Query (Spring Data):
+
+	@NamedQuery	@Query
+Defined on	Entity class	Repository interface
+Called via	EntityManager	Repository method directly
+Validated	At app startup	At app startup
+More common today	Less common	More common in Spring Boot
+
+In modern Spring Boot projects @Query on repository is more commonly used — but @NamedQuery shows up in older codebases and interviews to test your JPA depth.
+
+One-line interview answer:
+"@NamedQuery is a predefined JPQL query defined on the entity class and called by name. Its main advantage is that Hibernate validates it at startup so you catch query errors early, not at runtime. In modern Spring Boot I mostly use @Query on repositories, but @NamedQuery is still relevant in older JPA codebases."
