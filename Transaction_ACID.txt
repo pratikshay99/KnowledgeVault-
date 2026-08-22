@@ -1,0 +1,20 @@
+Transaction has 4 important properties — ACID
+
+You will often hear ACID in interviews:
+
+Property	Meaning
+A — Atomicity	All operations succeed or all are rolled back
+C — Consistency	Database remains in a valid state
+I — Isolation	Concurrent transactions don't improperly interfere
+D — Durability	Once committed, data remains saved
+Easy interview example
+
+If interviewer asks:
+
+What is a transaction?
+
+You can say:
+
+"A transaction is a unit of work consisting of one or more database operations that are executed as a single unit. If all operations succeed, the transaction is committed; if an appropriate failure occurs, the changes are rolled back. In Spring, we commonly use @Transactional to manage transactions."
+
+One important point for Spring interviews: @Transactional is not a JPA annotation; it is commonly provided by Spring (org.springframework.transaction.annotation.Transactional) and works through Spring's transaction management/proxy mechanism.
