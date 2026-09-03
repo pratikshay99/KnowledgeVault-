@@ -1,0 +1,30 @@
+PIPE → LAZY → TRIGGER → CLEAN → ONE-TIME
+
+PIPE = it's a pipeline, not storage
+LAZY = filter/map don't run immediately
+TRIGGER = terminal op (collect/reduce) starts execution
+CLEAN = readable, avoids nested loops
+ONE-TIME = can't reuse a stream after terminal op
+
+Stream API : way to process collections like Lists in a cleaner, more readable way, instead of writing manual loops.
+
+A Collection (List, Set) is a data structure — it stores elements in memory.
+stream itself doesn't store any data. It's pipeline that processes elements from a source (a Collection, array, file, etc.), one at a time, on demand.
+
+A Stream pipeline has 3 parts: source (e.g. a List), 2 types of operations in this pipeline. 1st, intermediate operations(filter, map, sorted- these return new Stream and are lazy, meaning they don't execute immediately), they just get added as steps in pipeline. 2nd, terminal operation (collect, forEach, reduce, count — this is what actually triggers execution & gives final result).
+
+readability — I can chain multiple steps like filter, transform, & collect in one clean line, instead of writing nested loops.
+
+stream can only be used once. Once I call a terminal operation, that stream is done — I can't run another operation on it, I'd have to create a fresh stream from the source.
+
+1. filter — keep only what matches a condition: Use when: you want a subset of data.
+2. map — transform each element: Use when: you need to convert each item into something else.
+3. forEach — just do something with each item (no return): Use when: printing/logging — no result needed, just side effects.
+4. count — how many match: 
+5. filter + map + collect : Use when: you need to select + transform in one pipeline.
+6. sorted
+7. reduce — combine everything into ONE value: Use when: you want a single result from all elements (sum, max, product).
+8. min / max : Note: returns Optional because the stream could be empty.
+9. Collectors.groupingBy — split into categories: Use when: you need to bucket data by some key — very common in real interview problems (group employees by department, group orders by status, etc.)
+10. Collectors.joining — combine into one String
+11. flatMap — flatten nested lists into one stream: Use when: you have a list-of-lists and need one flat list. Classic interview trap: candidates try map here instead of flatMap and get a Stream<List<Integer>> by mistake.
