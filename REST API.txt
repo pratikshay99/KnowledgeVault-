@@ -31,7 +31,7 @@ DELETE: Remove a resource from the server, idempotent
 **What is Idempotency/Itempotent?
 Idempotent operations produce the same result no matter how many times they are executed.
 Examples: GET, PUT, DELETE.
-Non-idempotent example: POST (because it creates a new resource every time it's called).
+Non-idempotent example: POST,patch (because it creates a new resource every time it's called).
 ========================================================================================================================================================
 HTTP status codes indicate the outcome of a request:
 2xx (Success):
@@ -47,8 +47,8 @@ HTTP status codes indicate the outcome of a request:
 500 Internal Server Error: Server encountered an issue.
 502 Bad Gateway, 503 Service Unavailable
 ========================================================================================================================================================
-PUT: Updates/replaces entire resource with new version. If a field is missing in the payload, it will overwrite with null or default values.
-PATCH: Partially updates the resource, modifying only specified fields.
+PUT: Updates/replaces entire resource with new version. If a field is missing in the payload, it will overwrite with null or default value, idempotent, can create new resource if target id doesn't exist, payload must contain complete resource representation
+PATCH: Partially updates the resource, modifying only specified fields, non idempotent(like incrementing counter), fails if resource doesn't exist, payload contains only field/changes being modified
 ========================================================================================================================================================
 How is authentication handled in REST APIs?
 API Keys: A unique key provided to the client.
